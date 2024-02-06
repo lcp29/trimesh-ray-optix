@@ -1,4 +1,3 @@
-# helmholtz
 
 import hmesh
 import setuptools

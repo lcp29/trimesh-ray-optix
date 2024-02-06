@@ -1,9 +1,11 @@
 
-#include "CUDABuffer.h"
 #include "optix8.h"
-#include "optix_host.h"
-#include "optix_types.h"
+#include "types.h"
+#include <optix_function_table_definition.h>
+#include <torch/extension.h>
 #include <iostream>
+
+namespace hmesh {
 
 CUcontext cuCtx;
 CUstream cuStream;
@@ -17,13 +19,24 @@ static void context_log_cb(unsigned int level,
     std::cerr << "[" << (int)level << "][" << tag << "]: " << message << "\n";
 }
 
+void initOptix()
+{
+    optixInit();
+}
+
 void createOptixContext()
 {
-    OPTIX_CHECK(optixInit());
-    CUDA_CHECK(StreamCreate(&cuStream));
+    cudaStreamCreate(&cuStream);
     CUresult res = cuCtxGetCurrent(&cuCtx);
     if (res != CUDA_SUCCESS)
         std::cerr << "Error getting current CUDA context: error code " << res << "\n";
-    OPTIX_CHECK(optixDeviceContextCreate(cuCtx, nullptr, &optixContext));
-    OPTIX_CHECK(optixDeviceContextSetLogCallback(optixContext, context_log_cb, nullptr, 4))
+    optixDeviceContextCreate(cuCtx, nullptr, &optixContext);
+    optixDeviceContextSetLogCallback(optixContext, context_log_cb, nullptr, 4);
 }
+
+void buildAcclerationStructure(torch::Tensor vertices, torch::Tensor faces)
+{
+    
+}
+
+} // namespace hmesh
