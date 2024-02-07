@@ -9,7 +9,7 @@ extern CUstream cuStream;
 extern OptixDeviceContext optixContext;
 
 void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
-                                                     torch::Tensor faces) {
+                                                        torch::Tensor faces) {
     OptixAccelBuildOptions buildOptions = {};
     OptixBuildInput buildInput;
 
@@ -37,9 +37,11 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     buildInput.triangleArray.indexStrideInBytes = sizeof(vec3i);
     buildInput.triangleArray.preTransform = 0;
 
+    // todo buildOptions for SBT
+
     OptixAccelBufferSizes bufferSizes = {};
-    optixAccelComputeMemoryUsage(optixContext, &buildOptions, &buildInput, 1,
-                                 &bufferSizes);
+    OPTIX_CHECK(optixAccelComputeMemoryUsage(optixContext, &buildOptions,
+                                             &buildInput, 1, &bufferSizes));
 
     CUDABuffer tempBuffer;
     accelStructureBuffer.alloc(bufferSizes.outputSizeInBytes);
