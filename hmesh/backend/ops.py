@@ -16,8 +16,9 @@ def get_module():
     # source file
     source_files = [
         'base.cpp',
-        'bindings.cpp',
-        'ray.cpp'
+        'binding.cpp',
+        'ray.cpp',
+        'program.cpp'
     ]
     # optix install location
     optix_install_dir = os.environ['OptiX_INSTALL_DIR']

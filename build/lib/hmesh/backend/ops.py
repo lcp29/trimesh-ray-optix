@@ -1,6 +1,7 @@
 
 import os
 import torch
+from jaxtyping import Float32, Bool
 import importlib
 import torch.utils.cpp_extension
 
@@ -15,8 +16,9 @@ def get_module():
     # source file
     source_files = [
         'base.cpp',
-        'bindings.cpp',
-        'ray.cpp'
+        'binding.cpp',
+        'ray.cpp',
+        'program.cpp'
     ]
     # optix install location
     optix_install_dir = os.environ['OptiX_INSTALL_DIR']
@@ -44,6 +46,6 @@ def create_optix_context():
     if optix_inited:
         get_module().createOptixContext()
 
-def intersects_any(origins: torch.Tensor,
-                   dirs: torch.Tensor) -> torch.Tensor:
+def intersects_any(origins: Float32[torch.Tensor, "n 3"],
+                   dirs: Float32[torch.Tensor, "n 3"]) -> Bool[torch.Tensor, "n"]:
     return get_module().intersectsAny(origins, dirs)

@@ -20,7 +20,8 @@ setuptools.setup(
             'backend/*.cpp',
             'backend/*.h',
             'backend/*.py',
-            'ray/*.py'
+            'backend/*.cu',
+            'ray/*.py',
             '*.py'
         ]
     },

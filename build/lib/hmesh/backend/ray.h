@@ -8,7 +8,6 @@ namespace hmesh {
 
 struct OptixAccelStructureWrapperCPP {
 private:
-    CUDABuffer accelStructureBuffer;
     OptixTraversableHandle asHandle = 0;
 
 public:

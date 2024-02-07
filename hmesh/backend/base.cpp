@@ -1,6 +1,5 @@
 
 #include "optix8.h"
-#include "types.h"
 #include <optix_function_table_definition.h>
 #include <torch/extension.h>
 #include <iostream>

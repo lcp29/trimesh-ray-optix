@@ -1,7 +1,10 @@
 
 #include "ray.h"
 #include "CUDABuffer.h"
-#include "types.h"
+#include "optix8.h"
+#include "optix_host.h"
+#include "optix_types.h"
+#include "type.h"
 
 namespace hmesh {
 
@@ -37,23 +40,47 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     buildInput.triangleArray.indexStrideInBytes = sizeof(vec3i);
     buildInput.triangleArray.preTransform = 0;
 
-    // todo buildOptions for SBT
+    buildInput.triangleArray.numSbtRecords = 1;
+    buildInput.triangleArray.sbtIndexOffsetBuffer = 0;
+    buildInput.triangleArray.sbtIndexOffsetSizeInBytes = 0;
+    buildInput.triangleArray.sbtIndexOffsetStrideInBytes = 0;
+
+    uint32_t triangleBuildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+    buildInput.triangleArray.flags = &triangleBuildFlags;
 
     OptixAccelBufferSizes bufferSizes = {};
     OPTIX_CHECK(optixAccelComputeMemoryUsage(optixContext, &buildOptions,
                                              &buildInput, 1, &bufferSizes));
 
     CUDABuffer tempBuffer;
+    CUDABuffer accelStructureBuffer;
     accelStructureBuffer.alloc(bufferSizes.outputSizeInBytes);
     tempBuffer.alloc(bufferSizes.tempSizeInBytes);
+
+    CUDABuffer compactedSizeBuffer;
+    compactedSizeBuffer.alloc(sizeof(uint64_t));
+    OptixAccelEmitDesc emitDesc;
+    emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+    emitDesc.result = compactedSizeBuffer.d_pointer();
 
     OPTIX_CHECK(optixAccelBuild(
         optixContext, cuStream, &buildOptions, &buildInput, 1,
         (CUdeviceptr)tempBuffer.d_ptr, tempBuffer.sizeInBytes,
         (CUdeviceptr)accelStructureBuffer.d_ptr,
-        accelStructureBuffer.sizeInBytes, &asHandle, nullptr, 0));
+        accelStructureBuffer.sizeInBytes, &asHandle, &emitDesc, 1));
 
+    uint64_t compactedSize;
+    compactedSizeBuffer.download(&compactedSize, 1);
+
+    OPTIX_CHECK(optixAccelCompact(optixContext, cuStream, asHandle,
+                                  accelStructureBuffer.d_pointer(),
+                                  compactedSize, &asHandle));
+
+    CUDA_SYNC_CHECK();
+
+    compactedSizeBuffer.free();
     tempBuffer.free();
+    accelStructureBuffer.free();
 }
 
 torch::Tensor intersectsAny(torch::Tensor origins, torch::Tensor dirs) {
