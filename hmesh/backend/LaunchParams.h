@@ -4,7 +4,7 @@
 
 namespace hmesh {
 
-extern "C" struct LaunchParamsIntersectAny {
+extern "C" struct LaunchParams {
     // ray count
     size_t nray;
     // ray origins
