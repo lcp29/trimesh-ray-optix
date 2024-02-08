@@ -1,10 +1,18 @@
 #pragma once
 
-namespace hmesh{
+#include <optix_types.h>
 
-extern "C"
-struct LaunchParams {
-    int a;
+namespace hmesh {
+
+extern "C" struct LaunchParamsIntersectAny {
+    // ray count
+    size_t nray;
+    // ray origins
+    CUdeviceptr origins;
+    // ray directions
+    CUdeviceptr dirs;
+    // output buffer
+    CUdeviceptr result;
 };
 
 } // namespace hmesh
