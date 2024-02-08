@@ -6,7 +6,6 @@ import importlib
 import torch.utils.cpp_extension
 
 hmesh_module = None
-optix_inited = False
 
 def get_module():
     global hmesh_module
@@ -37,14 +36,13 @@ def get_module():
     return hmesh_module
 
 def init_optix():
-    global optix_inited
     get_module().initOptix()
-    optix_inited = True
 
 def create_optix_context():
-    global optix_inited
-    if optix_inited:
-        get_module().createOptixContext()
+    get_module().createOptixContext()
+
+def create_optix_module():
+    get_module().createOptixModule()
 
 def intersects_any(origins: Float32[torch.Tensor, "n 3"],
                    dirs: Float32[torch.Tensor, "n 3"]) -> Bool[torch.Tensor, "n"]:

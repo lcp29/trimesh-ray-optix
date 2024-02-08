@@ -1,3 +1,9 @@
+/**
+ * @file ray.cpp
+ * @author helmholtz
+ * @brief evrything per-instance
+ * 
+ */
 
 #include "ray.h"
 #include "CUDABuffer.h"
@@ -20,7 +26,8 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     size_t tempBufferSizeInBytes, outputBufferSizeInBytes;
 
     memset(&buildOptions, 0, sizeof(buildOptions));
-    buildOptions.buildFlags = OPTIX_BUILD_FLAG_NONE | OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+    buildOptions.buildFlags =
+        OPTIX_BUILD_FLAG_NONE | OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
     buildOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
     buildOptions.motionOptions.numKeys = 0;
 
@@ -84,6 +91,7 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
 }
 
 torch::Tensor intersectsAny(torch::Tensor origins, torch::Tensor dirs) {
+
     return torch::Tensor();
 }
 

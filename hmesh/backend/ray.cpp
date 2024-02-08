@@ -1,3 +1,9 @@
+/**
+ * @file ray.cpp
+ * @author helmholtz
+ * @brief evrything per-instance
+ * 
+ */
 
 #include "ray.h"
 #include "CUDABuffer.h"
@@ -85,7 +91,7 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
 }
 
 torch::Tensor intersectsAny(torch::Tensor origins, torch::Tensor dirs) {
-    
+
     return torch::Tensor();
 }
 

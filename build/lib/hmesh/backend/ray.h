@@ -14,4 +14,6 @@ public:
     void buildAccelStructure(torch::Tensor vertices, torch::Tensor faces);
 };
 
+extern torch::Tensor intersectsAny(torch::Tensor origins, torch::Tensor dirs);
+
 } // namespace hmesh

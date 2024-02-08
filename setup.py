@@ -69,6 +69,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data={
         'hmesh': [
+            'backend/embedded/shaders_embedded.h',
             'backend/*.cpp',
             'backend/*.h',
             'backend/*.py',

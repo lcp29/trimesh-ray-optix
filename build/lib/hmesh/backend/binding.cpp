@@ -6,6 +6,7 @@ namespace hmesh {
 
 extern void initOptix();
 extern void createOptixContext();
+extern void createOptixModule();
 extern torch::Tensor intersectsAny(torch::Tensor, torch::Tensor);
 
 } // namespace hmesh
@@ -18,5 +19,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
     m.def("initOptix", &hmesh::initOptix, "Initialize Optix");
     m.def("createOptixContext", &hmesh::createOptixContext, "Create Optix context");
+    m.def("createOptixModule", &hmesh::createOptixModule, "Create Optix module");
     m.def("intersectsAny", &hmesh::intersectsAny, "Find out if each ray hit any triangle on the mesh.");
 }
