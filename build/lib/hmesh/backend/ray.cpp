@@ -20,7 +20,7 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     size_t tempBufferSizeInBytes, outputBufferSizeInBytes;
 
     memset(&buildOptions, 0, sizeof(buildOptions));
-    buildOptions.buildFlags = OPTIX_BUILD_FLAG_NONE;
+    buildOptions.buildFlags = OPTIX_BUILD_FLAG_NONE | OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
     buildOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
     buildOptions.motionOptions.numKeys = 0;
 
@@ -45,7 +45,7 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     buildInput.triangleArray.sbtIndexOffsetSizeInBytes = 0;
     buildInput.triangleArray.sbtIndexOffsetStrideInBytes = 0;
 
-    uint32_t triangleBuildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+    uint32_t triangleBuildFlags = 0;
     buildInput.triangleArray.flags = &triangleBuildFlags;
 
     OptixAccelBufferSizes bufferSizes = {};
