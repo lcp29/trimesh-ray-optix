@@ -7,6 +7,7 @@
 
 #include "ray.h"
 #include "CUDABuffer.h"
+#include "LaunchParams.h"
 #include "optix8.h"
 #include "optix_host.h"
 #include "optix_types.h"
@@ -91,7 +92,12 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
 }
 
 torch::Tensor intersectsAny(torch::Tensor origins, torch::Tensor dirs) {
-
+    // fill launch params
+    
+    // upload tensors
+    CUDABuffer originsBuffer;
+    LaunchParams lp = {};
+    
     return torch::Tensor();
 }
 

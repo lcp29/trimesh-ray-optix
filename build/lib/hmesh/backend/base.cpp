@@ -3,6 +3,7 @@
 #include "optix8.h"
 #include "optix_host.h"
 #include "optix_types.h"
+#include "sbtdef.h"
 #include <iostream>
 #include <optix_function_table_definition.h>
 #include <torch/extension.h>
@@ -13,6 +14,8 @@ CUcontext cuCtx;
 CUstream cuStream;
 OptixDeviceContext optixContext;
 OptixModule optixModule;
+
+OptixShaderBindingTable sbts[SBTType::count];
 
 static void context_log_cb(unsigned int level, const char *tag,
                            const char *message, void *) {
@@ -56,9 +59,16 @@ void createOptixModule() {
     char logString[2048];
     size_t logStringSize = 2048;
     OPTIX_CHECK(optixModuleCreate(optixContext, &moduleCompileOptions,
-                                  &pipelineCompileOptions, (const char *)shader_code,
-                                  shader_length, logString,
-                                  &logStringSize, &optixModule));
+                                  &pipelineCompileOptions,
+                                  (const char *)shader_code, shader_length,
+                                  logString, &logStringSize, &optixModule));
+}
+
+void buildSBT() {
+    for (int t = 0; t < SBTType::count; t++) {
+        const std::string &prgName = programNames[t];
+        
+    }
 }
 
 } // namespace hmesh
