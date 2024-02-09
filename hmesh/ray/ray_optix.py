@@ -13,9 +13,6 @@ class RayMeshIntersector:
         self.mesh_vertices = torch.from_numpy(mesh.vertices).float().contiguous().cuda()
         # [n, 3] int32 on the device
         self.mesh_faces = torch.from_numpy(mesh.faces).int().contiguous().cuda()
-        # initialize optix and create context
-        hops.init_optix()
-        hops.create_optix_context()
         # build acceleration structure
         self.as_wrapper = OptixAccelStructureWrapper()
         self.as_wrapper.build_accel_structure(self.mesh_vertices, self.mesh_faces)
@@ -23,7 +20,7 @@ class RayMeshIntersector:
     def intersects_any(self,
                        origins: torch.Tensor,
                        dirs: torch.Tensor) -> torch.Tensor:
-        return hops.intersects_any(origins, dirs)
+        return hops.intersects_any(self.as_wrapper, origins, dirs)
 
 
 class OptixAccelStructureWrapper:

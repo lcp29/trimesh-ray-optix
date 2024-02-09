@@ -4,6 +4,7 @@ import torch
 from jaxtyping import Float32, Bool
 import importlib
 import torch.utils.cpp_extension
+from hmesh.ray.ray_optix import OptixAccelStructureWrapper
 
 hmesh_module = None
 
@@ -44,6 +45,13 @@ def create_optix_context():
 def create_optix_module():
     get_module().createOptixModule()
 
-def intersects_any(origins: Float32[torch.Tensor, "n 3"],
+def create_optix_pipelines():
+    get_module().createOptixPipelines()
+
+def build_sbts():
+    get_module().buildSBT()
+
+def intersects_any(accel_structure: OptixAccelStructureWrapper,
+                   origins: Float32[torch.Tensor, "n 3"],
                    dirs: Float32[torch.Tensor, "n 3"]) -> Bool[torch.Tensor, "n"]:
-    return get_module().intersectsAny(origins, dirs)
+    return get_module().intersectsAny(accel_structure._inner, origins, dirs)

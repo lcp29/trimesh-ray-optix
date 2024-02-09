@@ -27,7 +27,7 @@ enum SBTType { INTERSECTS_ANY, count };
 #define PRG_EX 1 << 7
 
 const std::tuple<std::string, ProgramMask> programInfos[] = {
-    {"intersectsAny", PRG_RG | PRG_AH | PRG_MS}};
+    {"intersectsAny", PRG_RG | PRG_CH | PRG_MS}};
 
 template <typename T> struct SBTRecord {
     __align__(

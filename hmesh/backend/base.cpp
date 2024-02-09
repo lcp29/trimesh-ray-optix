@@ -16,6 +16,7 @@ CUcontext cuCtx;
 CUstream cuStream;
 OptixDeviceContext optixContext;
 OptixModule optixModule;
+OptixPipelineCompileOptions pipelineCompileOptions = {};
 
 // SBTs and pipelines for each function
 OptixShaderBindingTable sbts[SBTType::count];
@@ -49,12 +50,16 @@ void createOptixModule() {
     moduleCompileOptions.numPayloadTypes = 0;
     moduleCompileOptions.payloadTypes = nullptr;
 
-    OptixPipelineCompileOptions pipelineCompileOptions = {};
     pipelineCompileOptions.usesMotionBlur = false;
+    // must be ALLOW_SINGLE_GAS for only one GAS
     pipelineCompileOptions.traversableGraphFlags =
-        OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
+        OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
     pipelineCompileOptions.allowOpacityMicromaps = false;
+    // 0: hitT
+    // 1: hitKind
     pipelineCompileOptions.numAttributeValues = 2;
+    // 0: resultpointer low 32 bits
+    // 1: resultpointer high 32 bits
     pipelineCompileOptions.numPayloadValues = 2;
     pipelineCompileOptions.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
     pipelineCompileOptions.usesPrimitiveTypeFlags =
@@ -83,7 +88,7 @@ void createPipelines() {
         int prgMask = std::get<1>(programInfos[t]);
         // program group descriptors
         // { RAYGEN, HITGROUP, MISS }
-        OptixProgramGroupDesc pgDescs[3];
+        OptixProgramGroupDesc pgDescs[3] = {};
         // raygen program group
         pgDescs[0].kind = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
         pgDescs[0].raygen.module = optixModule;
@@ -109,7 +114,7 @@ void createPipelines() {
             pgDescs[2].miss.entryFunctionName = missName.c_str();
         }
         // program group options
-        OptixProgramGroupOptions pgOptions[3];
+        OptixProgramGroupOptions pgOptions[3] = {};
         // create program group
         char logString[2048];
         size_t logStringSize = 2048;
@@ -119,19 +124,6 @@ void createPipelines() {
         // create pipeline
         OptixPipelineLinkOptions pipelineLinkOptions = {};
         pipelineLinkOptions.maxTraceDepth = 1;
-
-        OptixPipelineCompileOptions pipelineCompileOptions = {};
-        pipelineCompileOptions.usesMotionBlur = false;
-        pipelineCompileOptions.traversableGraphFlags =
-            OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_LEVEL_INSTANCING;
-        pipelineCompileOptions.allowOpacityMicromaps = false;
-        pipelineCompileOptions.numAttributeValues = 2;
-        pipelineCompileOptions.numPayloadValues = 2;
-        pipelineCompileOptions.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
-        pipelineCompileOptions.usesPrimitiveTypeFlags =
-            OPTIX_PRIMITIVE_TYPE_FLAGS_TRIANGLE;
-        pipelineCompileOptions.pipelineLaunchParamsVariableName =
-            "launchParams";
 
         OPTIX_CHECK(optixPipelineCreate(optixContext, &pipelineCompileOptions,
                                         &pipelineLinkOptions, pg, 3, logString,
@@ -157,10 +149,10 @@ void buildSBT() {
         sbt.raygenRecord = rgRecDevice.d_pointer();
         sbt.hitgroupRecordBase = hgRecDevice.d_pointer();
         sbt.hitgroupRecordCount = 1;
-        sbt.hitgroupRecordStrideInBytes = 0;
+        sbt.hitgroupRecordStrideInBytes = sizeof(SBTRecordEmpty);
         sbt.missRecordBase = msRecDevice.d_pointer();
         sbt.missRecordCount = 1;
-        sbt.missRecordStrideInBytes = 0;
+        sbt.missRecordStrideInBytes = sizeof(SBTRecordEmpty);
     }
 }
 

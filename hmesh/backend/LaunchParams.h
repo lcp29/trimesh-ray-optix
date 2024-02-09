@@ -8,11 +8,11 @@ extern "C" struct LaunchParams {
     // ray count
     size_t nray;
     // ray origins
-    CUdeviceptr origins;
+    float *origins;
     // ray directions
-    CUdeviceptr dirs;
+    float *dirs;
     // output buffer
-    CUdeviceptr result;
+    bool *result;
 
     // acceleration structure handle
     OptixTraversableHandle traversable;

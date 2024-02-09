@@ -2,37 +2,35 @@
  * @file ray.cpp
  * @author helmholtz
  * @brief evrything per-instance
- * 
+ *
  */
 
 #include "ray.h"
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
+#include "base.h"
+#include "c10/core/ScalarType.h"
+#include "c10/core/TensorOptions.h"
 #include "optix8.h"
 #include "optix_host.h"
 #include "optix_types.h"
+#include "sbtdef.h"
 #include "type.h"
 
 namespace hmesh {
 
-extern CUstream cuStream;
-extern OptixDeviceContext optixContext;
-
 void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
                                                         torch::Tensor faces) {
     OptixAccelBuildOptions buildOptions = {};
-    OptixBuildInput buildInput;
+    OptixBuildInput buildInput = {};
 
     // CUdeviceptr tempBuffer, outputBuffer;
     size_t tempBufferSizeInBytes, outputBufferSizeInBytes;
 
-    memset(&buildOptions, 0, sizeof(buildOptions));
     buildOptions.buildFlags =
         OPTIX_BUILD_FLAG_NONE | OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
     buildOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
-    buildOptions.motionOptions.numKeys = 0;
-
-    memset(&buildInput, 0, sizeof(buildInput));
+    buildOptions.motionOptions.numKeys = 1;
 
     CUdeviceptr pVert = (CUdeviceptr)vertices.data_ptr();
     CUdeviceptr pFace = (CUdeviceptr)faces.data_ptr();
@@ -77,11 +75,14 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
         (CUdeviceptr)accelStructureBuffer.d_ptr,
         accelStructureBuffer.sizeInBytes, &asHandle, &emitDesc, 1));
 
+    CUDA_SYNC_CHECK();
+
     uint64_t compactedSize;
     compactedSizeBuffer.download(&compactedSize, 1);
+    asBuffer.resize(compactedSize);
 
     OPTIX_CHECK(optixAccelCompact(optixContext, cuStream, asHandle,
-                                  accelStructureBuffer.d_pointer(),
+                                  asBuffer.d_pointer(),
                                   compactedSize, &asHandle));
 
     CUDA_SYNC_CHECK();
@@ -91,14 +92,31 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     accelStructureBuffer.free();
 }
 
-torch::Tensor intersectsAny(torch::Tensor origins, torch::Tensor dirs) {
+torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
+                            torch::Tensor origins, torch::Tensor dirs) {
+    if (!(origins.is_cuda() && dirs.is_cuda())) {
+        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
+                  << ": input tensors must reside on cuda device.\n";
+        return torch::Tensor();
+    }
+    // output buffer
+    auto options =
+        torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
+    auto result = torch::empty({origins.size(0)}, options);
     // fill launch params
-    
-    // upload tensors
-    CUDABuffer originsBuffer;
     LaunchParams lp = {};
-    
-    return torch::Tensor();
+    lp.origins = origins.data_ptr<float>();
+    lp.dirs = dirs.data_ptr<float>();
+    lp.nray = origins.size(0);
+    lp.traversable = as.asHandle;
+    lp.result = result.data_ptr<bool>();
+    CUDABuffer lpBuffer;
+    lpBuffer.alloc_and_upload(&lp, 1);
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_ANY], cuStream,
+                lpBuffer.d_pointer(), sizeof(LaunchParams),
+                &sbts[SBTType::INTERSECTS_ANY], lp.nray, 1, 1);
+    lpBuffer.free();
+    return result;
 }
 
 } // namespace hmesh
