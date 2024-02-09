@@ -1,7 +1,7 @@
 
 import os
 import torch
-from jaxtyping import Float32, Bool
+from jaxtyping import Float32, Bool, Int32
 import importlib
 import torch.utils.cpp_extension
 from hmesh.ray.ray_optix import OptixAccelStructureWrapper
@@ -55,3 +55,8 @@ def intersects_any(accel_structure: OptixAccelStructureWrapper,
                    origins: Float32[torch.Tensor, "n 3"],
                    dirs: Float32[torch.Tensor, "n 3"]) -> Bool[torch.Tensor, "n"]:
     return get_module().intersectsAny(accel_structure._inner, origins, dirs)
+
+def intersects_first(accel_structure: OptixAccelStructureWrapper,
+                     origins: Float32[torch.Tensor, "n 3"],
+                     dirs: Float32[torch.Tensor, "n 3"]) -> Int32[torch.Tensor, "n"]:
+    return get_module().intersectsFirst(accel_structure._inner, origins, dirs)

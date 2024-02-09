@@ -11,6 +11,7 @@
 #include "base.h"
 #include "c10/core/ScalarType.h"
 #include "c10/core/TensorOptions.h"
+#include "c10/util/ArrayRef.h"
 #include "optix8.h"
 #include "optix_host.h"
 #include "optix_types.h"
@@ -82,8 +83,8 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     asBuffer.resize(compactedSize);
 
     OPTIX_CHECK(optixAccelCompact(optixContext, cuStream, asHandle,
-                                  asBuffer.d_pointer(),
-                                  compactedSize, &asHandle));
+                                  asBuffer.d_pointer(), compactedSize,
+                                  &asHandle));
 
     CUDA_SYNC_CHECK();
 
@@ -99,15 +100,25 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
                   << ": input tensors must reside on cuda device.\n";
         return torch::Tensor();
     }
+    if (!(origins.is_contiguous() && dirs.is_contiguous())) {
+        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
+                  << ": input tensors must be contiguous.\n";
+        return torch::Tensor();
+    }
     // output buffer
     auto options =
         torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
-    auto result = torch::empty({origins.size(0)}, options);
+    auto resultSize = origins.sizes();
+    resultSize = resultSize.slice(0, resultSize.size() - 1);
+    auto nray = 1;
+    for (auto s : resultSize)
+        nray *= s;
+    auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
     lp.origins = origins.data_ptr<float>();
     lp.dirs = dirs.data_ptr<float>();
-    lp.nray = origins.size(0);
+    lp.nray = nray;
     lp.traversable = as.asHandle;
     lp.result = result.data_ptr<bool>();
     CUDABuffer lpBuffer;
@@ -115,6 +126,43 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
     optixLaunch(optixPipelines[SBTType::INTERSECTS_ANY], cuStream,
                 lpBuffer.d_pointer(), sizeof(LaunchParams),
                 &sbts[SBTType::INTERSECTS_ANY], lp.nray, 1, 1);
+    lpBuffer.free();
+    return result;
+}
+
+torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
+                              torch::Tensor origins, torch::Tensor dirs) {
+    if (!(origins.is_cuda() && dirs.is_cuda())) {
+        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
+                  << ": input tensors must reside on cuda device.\n";
+        return torch::Tensor();
+    }
+    if (!(origins.is_contiguous() && dirs.is_contiguous())) {
+        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
+                  << ": input tensors must be contiguous.\n";
+        return torch::Tensor();
+    }
+    // output buffer
+    auto options =
+        torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
+    auto resultSize = origins.sizes();
+    resultSize = resultSize.slice(0, resultSize.size() - 1);
+    auto nray = 1;
+    for (auto s : resultSize)
+        nray *= s;
+    auto result = torch::empty(resultSize, options);
+    // fill launch params
+    LaunchParams lp = {};
+    lp.origins = origins.data_ptr<float>();
+    lp.dirs = dirs.data_ptr<float>();
+    lp.nray = nray;
+    lp.traversable = as.asHandle;
+    lp.result = result.data_ptr();
+    CUDABuffer lpBuffer;
+    lpBuffer.alloc_and_upload(&lp, 1);
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_FIRST], cuStream,
+                lpBuffer.d_pointer(), sizeof(LaunchParams),
+                &sbts[SBTType::INTERSECTS_FIRST], lp.nray, 1, 1);
     lpBuffer.free();
     return result;
 }

@@ -3,4 +3,4 @@
 __pycache__
 hmesh/backend/embedded/shaders.optixir
 hmesh/backend/embedded/shaders_embedded.h
-.build/
+build/

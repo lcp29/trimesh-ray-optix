@@ -9,6 +9,8 @@ extern void createOptixContext();
 extern void createOptixModule();
 extern torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP, torch::Tensor,
                                    torch::Tensor);
+extern torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP,
+                                     torch::Tensor, torch::Tensor);
 extern void createPipelines();
 extern void buildSBT();
 
@@ -31,4 +33,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("buildSBT", &hmesh::buildSBT, "Build SBT for each function type.");
     m.def("intersectsAny", &hmesh::intersectsAny,
           "Find out if each ray hit any triangle on the mesh.");
+    m.def("intersectsFirst", &hmesh::intersectsFirst,
+          "Find the index of the first triangle a ray hits.");
 }

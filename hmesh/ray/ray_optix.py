@@ -1,6 +1,6 @@
 import torch
 import trimesh
-from jaxtyping import Float32, Int32
+from jaxtyping import Float32, Int32, Bool
 import hmesh.backend.ops as hops
 
 class RayMeshIntersector:
@@ -18,9 +18,14 @@ class RayMeshIntersector:
         self.as_wrapper.build_accel_structure(self.mesh_vertices, self.mesh_faces)
     
     def intersects_any(self,
-                       origins: torch.Tensor,
-                       dirs: torch.Tensor) -> torch.Tensor:
+                       origins: Float32[torch.Tensor, "... 3"],
+                       dirs: Float32[torch.Tensor, "... 3"]) -> Bool[torch.Tensor, "..."]:
         return hops.intersects_any(self.as_wrapper, origins, dirs)
+    
+    def intersects_first(self,
+                         origins: Float32[torch.Tensor, "... 3"],
+                         dirs: Float32[torch.Tensor, "... 3"]) -> Bool[torch.Tensor, "..."]:
+        return hops.intersects_first(self.as_wrapper, origins, dirs)
 
 
 class OptixAccelStructureWrapper:

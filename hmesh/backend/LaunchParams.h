@@ -12,7 +12,7 @@ extern "C" struct LaunchParams {
     // ray directions
     float *dirs;
     // output buffer
-    bool *result;
+    void *result;
 
     // acceleration structure handle
     OptixTraversableHandle traversable;
