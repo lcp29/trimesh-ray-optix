@@ -28,6 +28,8 @@ def compile_and_embed_shaders():
         '--use_fast_math',
         '-m64',
         '--relocatable-device-code=true',
+        '--std=c++17',
+        '--expt-relaxed-constexpr', # for <tuple> to be correctly compiled
         SHADER_LOCATION,
         '-o',
         SHADER_IR_PATH

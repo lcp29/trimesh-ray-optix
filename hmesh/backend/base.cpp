@@ -51,7 +51,7 @@ void createOptixModule() {
     moduleCompileOptions.payloadTypes = nullptr;
 
     pipelineCompileOptions.usesMotionBlur = false;
-    // must be ALLOW_SINGLE_GAS for only one GAS
+    // !must be ALLOW_SINGLE_GAS for only one GAS
     pipelineCompileOptions.traversableGraphFlags =
         OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
     pipelineCompileOptions.allowOpacityMicromaps = false;

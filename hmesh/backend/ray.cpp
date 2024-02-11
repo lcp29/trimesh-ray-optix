@@ -117,6 +117,13 @@ template <typename... Ts> inline bool tensorInputCheck(Ts... ts) {
     return valid;
 }
 
+inline size_t batchSize(const c10::IntArrayRef &dims) {
+    size_t sz = 1;
+    for (int i = 0; i < dims.size() - 1; i++)
+        sz *= dims[i];
+    return sz;
+}
+
 torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
                             const torch::Tensor &origins,
                             const torch::Tensor &directions) {
@@ -127,9 +134,7 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
         torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
     auto resultSize = origins.sizes();
     resultSize = resultSize.slice(0, resultSize.size() - 1);
-    auto nray = 1;
-    for (auto s : resultSize)
-        nray *= s;
+    auto nray = batchSize(origins.sizes());
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
@@ -177,19 +182,21 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
     return result;
 }
 
+/**
+ * @brief Returns the closest inte
+ *
+ * @param as
+ * @param origins
+ * @param directions
+ * @return std::tuple<torch::Tensor, torch::Tensor, torch::Tensor,
+ * torch::Tensor>
+ */
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
 intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
-                  torch::Tensor dirs) {
-    if (!(origins.is_cuda() && dirs.is_cuda())) {
-        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
-                  << ": input tensors must reside in cuda device.\n";
+                  torch::Tensor directions) {
+    if (!tensorInputCheck(origins, directions))
         return {};
-    }
-    if (!(origins.is_contiguous() && dirs.is_contiguous())) {
-        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
-                  << ": input tensors must be contiguous.\n";
-        return {};
-    }
+
     return {};
 }
 
