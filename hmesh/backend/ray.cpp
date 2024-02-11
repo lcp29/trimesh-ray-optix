@@ -6,6 +6,7 @@
  */
 
 #include "ray.h"
+#include "ATen/core/TensorBody.h"
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
 #include "base.h"
@@ -93,18 +94,34 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     accelStructureBuffer.free();
 }
 
+void OptixAccelStructureWrapperCPP::freeAccelStructure() { asBuffer.free(); }
+
+template <typename... Ts> inline bool tensorInputCheck(Ts... ts) {
+    bool valid = true;
+    (
+        [&] {
+            if (!ts.is_cuda()) {
+                std::cerr << "error in file " << __FILE__ << " line "
+                          << __LINE__
+                          << ": input tensors must reside in cuda device.\n";
+                valid = false;
+            }
+            if (!ts.is_contiguous()) {
+                std::cerr << "error in file " << __FILE__ << " line "
+                          << __LINE__
+                          << ": input tensors must be contiguous.\n";
+                valid = false;
+            }
+        }(),
+        ...);
+    return valid;
+}
+
 torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
-                            torch::Tensor origins, torch::Tensor dirs) {
-    if (!(origins.is_cuda() && dirs.is_cuda())) {
-        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
-                  << ": input tensors must reside on cuda device.\n";
-        return torch::Tensor();
-    }
-    if (!(origins.is_contiguous() && dirs.is_contiguous())) {
-        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
-                  << ": input tensors must be contiguous.\n";
-        return torch::Tensor();
-    }
+                            const torch::Tensor &origins,
+                            const torch::Tensor &directions) {
+    if (!tensorInputCheck(origins, directions))
+        return {};
     // output buffer
     auto options =
         torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
@@ -117,7 +134,7 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
     // fill launch params
     LaunchParams lp = {};
     lp.rays.origins = origins.data_ptr<float>();
-    lp.rays.directions = dirs.data_ptr<float>();
+    lp.rays.directions = directions.data_ptr<float>();
     lp.rays.nray = nray;
     lp.traversable = as.asHandle;
     lp.results.hit = result.data_ptr<bool>();
@@ -131,17 +148,10 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
 }
 
 torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
-                              torch::Tensor origins, torch::Tensor dirs) {
-    if (!(origins.is_cuda() && dirs.is_cuda())) {
-        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
-                  << ": input tensors must reside on cuda device.\n";
-        return torch::Tensor();
-    }
-    if (!(origins.is_contiguous() && dirs.is_contiguous())) {
-        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
-                  << ": input tensors must be contiguous.\n";
-        return torch::Tensor();
-    }
+                              const torch::Tensor &origins,
+                              const torch::Tensor &directions) {
+    if (!tensorInputCheck(origins, directions))
+        return {};
     // output buffer
     auto options =
         torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
@@ -154,7 +164,7 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
     // fill launch params
     LaunchParams lp = {};
     lp.rays.origins = origins.data_ptr<float>();
-    lp.rays.directions = dirs.data_ptr<float>();
+    lp.rays.directions = directions.data_ptr<float>();
     lp.rays.nray = nray;
     lp.traversable = as.asHandle;
     lp.results.triIdx = result.data_ptr<int>();
@@ -165,6 +175,22 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
                 &sbts[SBTType::INTERSECTS_FIRST], lp.rays.nray, 1, 1);
     lpBuffer.free();
     return result;
+}
+
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
+intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
+                  torch::Tensor dirs) {
+    if (!(origins.is_cuda() && dirs.is_cuda())) {
+        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
+                  << ": input tensors must reside in cuda device.\n";
+        return {};
+    }
+    if (!(origins.is_contiguous() && dirs.is_contiguous())) {
+        std::cerr << "error in file " << __FILE__ << " line " << __LINE__
+                  << ": input tensors must be contiguous.\n";
+        return {};
+    }
+    return {};
 }
 
 } // namespace hmesh
