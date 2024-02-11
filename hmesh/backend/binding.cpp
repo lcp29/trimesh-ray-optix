@@ -7,10 +7,12 @@ namespace hmesh {
 extern void initOptix();
 extern void createOptixContext();
 extern void createOptixModule();
-extern torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP, torch::Tensor,
-                                   torch::Tensor);
-extern torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP,
-                                     torch::Tensor, torch::Tensor);
+extern torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
+                                   const torch::Tensor &origins,
+                                   const torch::Tensor &dirs);
+extern torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
+                                     const torch::Tensor &origins,
+                                     const torch::Tensor &dirs);
 extern void createPipelines();
 extern void buildSBT();
 
