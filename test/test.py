@@ -15,15 +15,15 @@ print(r.intersects_first(o, d))
 
 s = trimesh.creation.icosphere()
 sr = RayMeshIntersector(s)
-x, y = torch.meshgrid([torch.linspace(-1, 1, 128),
-                       torch.linspace(-1, 1, 128)],
+x, y = torch.meshgrid([torch.linspace(-1, 1, 1280),
+                       torch.linspace(-1, 1, 1280)],
                        indexing='ij')
 
 z = -torch.ones_like(x)
 
 dirs = torch.stack([x, -y, z], dim=-1).float().cuda().contiguous()
-origin = torch.Tensor([[0, 0, 1]]).float().cuda().broadcast_to(dirs.shape).contiguous()
+origin = torch.Tensor([[0, 0, 3]]).float().cuda().broadcast_to(dirs.shape).contiguous()
 
 result = sr.intersects_first(origin, dirs)
-print(result)
-
+plt.imshow(result.cpu())
+plt.show()

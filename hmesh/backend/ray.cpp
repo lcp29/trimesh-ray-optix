@@ -116,16 +116,16 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.origins = origins.data_ptr<float>();
-    lp.dirs = dirs.data_ptr<float>();
-    lp.nray = nray;
+    lp.rays.origins = origins.data_ptr<float>();
+    lp.rays.directions = dirs.data_ptr<float>();
+    lp.rays.nray = nray;
     lp.traversable = as.asHandle;
-    lp.result = result.data_ptr<bool>();
+    lp.results.hit = result.data_ptr<bool>();
     CUDABuffer lpBuffer;
     lpBuffer.alloc_and_upload(&lp, 1);
     optixLaunch(optixPipelines[SBTType::INTERSECTS_ANY], cuStream,
                 lpBuffer.d_pointer(), sizeof(LaunchParams),
-                &sbts[SBTType::INTERSECTS_ANY], lp.nray, 1, 1);
+                &sbts[SBTType::INTERSECTS_ANY], lp.rays.nray, 1, 1);
     lpBuffer.free();
     return result;
 }
@@ -153,16 +153,16 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.origins = origins.data_ptr<float>();
-    lp.dirs = dirs.data_ptr<float>();
-    lp.nray = nray;
+    lp.rays.origins = origins.data_ptr<float>();
+    lp.rays.directions = dirs.data_ptr<float>();
+    lp.rays.nray = nray;
     lp.traversable = as.asHandle;
-    lp.result = result.data_ptr();
+    lp.results.triIdx = result.data_ptr<int>();
     CUDABuffer lpBuffer;
     lpBuffer.alloc_and_upload(&lp, 1);
     optixLaunch(optixPipelines[SBTType::INTERSECTS_FIRST], cuStream,
                 lpBuffer.d_pointer(), sizeof(LaunchParams),
-                &sbts[SBTType::INTERSECTS_FIRST], lp.nray, 1, 1);
+                &sbts[SBTType::INTERSECTS_FIRST], lp.rays.nray, 1, 1);
     lpBuffer.free();
     return result;
 }

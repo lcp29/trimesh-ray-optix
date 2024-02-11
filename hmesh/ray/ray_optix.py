@@ -19,13 +19,13 @@ class RayMeshIntersector:
     
     def intersects_any(self,
                        origins: Float32[torch.Tensor, "... 3"],
-                       dirs: Float32[torch.Tensor, "... 3"]) -> Bool[torch.Tensor, "..."]:
-        return hops.intersects_any(self.as_wrapper, origins, dirs)
+                       directions: Float32[torch.Tensor, "... 3"]) -> Bool[torch.Tensor, "..."]:
+        return hops.intersects_any(self.as_wrapper, origins, directions)
     
     def intersects_first(self,
                          origins: Float32[torch.Tensor, "... 3"],
-                         dirs: Float32[torch.Tensor, "... 3"]) -> Bool[torch.Tensor, "..."]:
-        return hops.intersects_first(self.as_wrapper, origins, dirs)
+                         directions: Float32[torch.Tensor, "... 3"]) -> Bool[torch.Tensor, "..."]:
+        return hops.intersects_first(self.as_wrapper, origins, directions)
 
 
 class OptixAccelStructureWrapper:

@@ -4,16 +4,26 @@
 
 namespace hmesh {
 
-extern "C" struct LaunchParams {
+struct RayInput {
     // ray count
     size_t nray;
     // ray origins
     float *origins;
     // ray directions
-    float *dirs;
-    // output buffer
-    void *result;
+    float *directions;
+};
 
+struct LPResult {
+    float *location;
+    int *triIdx;
+    bool *hit;
+};
+
+extern "C" struct LaunchParams {
+    // input ray info
+    RayInput rays;
+    // output buffer
+    LPResult results;
     // acceleration structure handle
     OptixTraversableHandle traversable;
 };
