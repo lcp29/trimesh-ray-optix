@@ -7,6 +7,7 @@
 
 #include "ray.h"
 #include "ATen/core/TensorBody.h"
+#include "ATen/ops/empty.h"
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
 #include "base.h"
@@ -117,11 +118,26 @@ template <typename... Ts> inline bool tensorInputCheck(Ts... ts) {
     return valid;
 }
 
-inline size_t batchSize(const c10::IntArrayRef &dims) {
-    size_t sz = 1;
-    for (int i = 0; i < dims.size() - 1; i++)
-        sz *= dims[i];
-    return sz;
+inline c10::IntArrayRef removeLastDim(const c10::IntArrayRef dims) {
+    return dims.slice(0, dims.size() - 1);
+}
+
+inline size_t prod(const c10::IntArrayRef &dims) {
+    size_t p = 1;
+    for (int i = 0; i < dims.size(); i++)
+        p *= dims[i];
+    return p;
+}
+
+inline c10::IntArrayRef changeLastDim(const c10::IntArrayRef dims,
+                                      size_t value) {
+    auto dimsVec = dims.vec();
+    *(dimsVec.end()) = value;
+    return c10::IntArrayRef(dimsVec);
+}
+
+template <typename T> inline T *data_ptr(torch::Tensor t) {
+    return (T *)t.data_ptr();
 }
 
 torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
@@ -132,21 +148,20 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
     // output buffer
     auto options =
         torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
-    auto resultSize = origins.sizes();
-    resultSize = resultSize.slice(0, resultSize.size() - 1);
-    auto nray = batchSize(origins.sizes());
+    auto resultSize = removeLastDim(origins.sizes());
+    auto nray = prod(resultSize);
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.rays.origins = (float3*)origins.data_ptr();
-    lp.rays.directions = (float3*)directions.data_ptr();
+    lp.rays.origins = data_ptr<float3>(origins);
+    lp.rays.directions = data_ptr<float3>(directions);
     lp.rays.nray = nray;
     lp.traversable = as.asHandle;
-    lp.results.hit = result.data_ptr<bool>();
+    lp.results.hit = data_ptr<bool>(result);
     CUDABuffer lpBuffer;
     lpBuffer.alloc_and_upload(&lp, 1);
     optixLaunch(optixPipelines[SBTType::INTERSECTS_ANY], cuStream,
-                lpBuffer.d_pointer(), sizeof(LaunchParams),
+                lpBuffer.d_pointer(), sizeof(lp),
                 &sbts[SBTType::INTERSECTS_ANY], lp.rays.nray, 1, 1);
     lpBuffer.free();
     return result;
@@ -160,23 +175,20 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
     // output buffer
     auto options =
         torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
-    auto resultSize = origins.sizes();
-    resultSize = resultSize.slice(0, resultSize.size() - 1);
-    auto nray = 1;
-    for (auto s : resultSize)
-        nray *= s;
+    auto resultSize = removeLastDim(origins.sizes());
+    auto nray = prod(resultSize);
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.rays.origins = (float3*)origins.data_ptr();
-    lp.rays.directions = (float3*)directions.data_ptr();
+    lp.rays.origins = data_ptr<float3>(origins);
+    lp.rays.directions = data_ptr<float3>(directions);
     lp.rays.nray = nray;
     lp.traversable = as.asHandle;
-    lp.results.triIdx = result.data_ptr<int>();
+    lp.results.triIdx = data_ptr<int>(result);
     CUDABuffer lpBuffer;
     lpBuffer.alloc_and_upload(&lp, 1);
     optixLaunch(optixPipelines[SBTType::INTERSECTS_FIRST], cuStream,
-                lpBuffer.d_pointer(), sizeof(LaunchParams),
+                lpBuffer.d_pointer(), sizeof(lp),
                 &sbts[SBTType::INTERSECTS_FIRST], lp.rays.nray, 1, 1);
     lpBuffer.free();
     return result;
@@ -196,8 +208,51 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
                   torch::Tensor directions) {
     if (!tensorInputCheck(origins, directions))
         return {};
+    // output buffers
+    // hitmask buffer
+    auto hitbufOptions =
+        torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
+    auto hitbufSize = removeLastDim(origins.sizes());
+    auto hitbuf = torch::empty(hitbufSize, hitbufOptions);
+    // triangle index buffer
+    auto tibufOptions =
+        torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
+    auto tibufSize = removeLastDim(origins.sizes());
+    auto tibuf = torch::empty(tibufSize, tibufOptions);
+    // intersect location buffer
+    auto locbufOptions =
+        torch::TensorOptions().dtype(torch::kFloat).device(torch::kCUDA);
+    auto locbufSize = changeLastDim(origins.sizes(), 3);
+    auto locbuf = torch::empty(locbufSize, locbufOptions);
+    // uv buffer
+    auto uvbufOptions =
+        torch::TensorOptions().dtype(torch::kFloat).device(torch::kCUDA);
+    auto uvbufSize = changeLastDim(origins.sizes(), 2);
+    auto uvbuf = torch::empty(uvbufSize, uvbufOptions);
 
-    return {};
+    auto nray = prod(hitbufSize);
+
+    // fill and upload launchParams
+    LaunchParams lp = {};
+    lp.rays.nray = nray;
+    lp.rays.origins = data_ptr<float3>(origins);
+    lp.rays.directions = data_ptr<float3>(directions);
+
+    lp.results.hit = data_ptr<bool>(hitbuf);
+    lp.results.location = data_ptr<float3>(locbuf);
+    lp.results.triIdx = data_ptr<int>(tibuf);
+    lp.results.uv = data_ptr<float2>(uvbuf);
+
+    CUDABuffer lpBuffer;
+    lpBuffer.alloc_and_upload(&lp, 1);
+
+    // 启动！
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_CLOSEST], cuStream,
+                lpBuffer.d_pointer(), sizeof(lp),
+                &sbts[SBTType::INTERSECTS_CLOSEST], nray, 1, 1);
+
+    lpBuffer.free();
+    return {hitbuf, tibuf, locbuf, uvbuf};
 }
 
 } // namespace hmesh

@@ -82,6 +82,7 @@ struct WBData {
     bool hit;
     int triIdx;
     float3 loc;
+    float2 uv;
 };
 
 extern "C" __global__ void __miss__intersectsClosest() {
@@ -99,8 +100,8 @@ extern "C" __global__ void __raygen__intersectsClosest() {
     int idx = optixGetLaunchIndex().x;
     WBData wbdata;
     // ray info
-    float3 ray_origin = *(float3 *)(launchParams.rays.origins + idx * 3);
-    float3 ray_dir = *(float3 *)(launchParams.rays.directions + idx * 3);
+    float3 ray_origin = launchParams.rays.origins[idx];
+    float3 ray_dir = launchParams.rays.directions[idx];
     // result pointer
     auto [u0, u1] = setPayloadPointer(&wbdata);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,

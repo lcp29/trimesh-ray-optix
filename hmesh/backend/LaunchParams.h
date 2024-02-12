@@ -15,9 +15,10 @@ struct RayInput {
 };
 
 struct LPResult {
-    float *location;
+    float3 *location;
     int *triIdx;
     bool *hit;
+    float2 *uv;
 };
 
 extern "C" struct LaunchParams {
