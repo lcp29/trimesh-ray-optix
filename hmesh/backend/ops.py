@@ -84,3 +84,13 @@ def intersects_closest(
     Float32[torch.Tensor, "*b 2"],  # uv
 ]:
     return get_module().intersectsClosest(accel_structure._inner, origins, dirs)
+
+
+def intersects_location(
+    accel_structure: OptixAccelStructureWrapper,
+    origins: Float32[torch.Tensor, "*b 3"],
+    dirs: Float32[torch.Tensor, "*b 3"],
+) -> Tuple[
+    Float32[torch.Tensor, "h 3"], Int32[torch.Tensor, "h"], Int32[torch.Tensor, "h"]
+]:
+    return get_module().intersectsLocation(accel_structure._inner, origins, dirs)

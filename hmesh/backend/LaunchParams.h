@@ -5,6 +5,8 @@
 
 namespace hmesh {
 
+constexpr int MAX_ANYHIT_SIZE = 8;
+
 struct RayInput {
     // ray count
     size_t nray;
@@ -12,6 +14,10 @@ struct RayInput {
     float3 *origins;
     // ray directions
     float3 *directions;
+    // hit counts
+    int *hitCounts;
+    // global index
+    int *globalIdx;
 };
 
 struct LPResult {
@@ -20,6 +26,8 @@ struct LPResult {
     bool *hit;
     bool *front;
     float2 *uv;
+    int *hitCount;
+    int *rayIdx;
 };
 
 extern "C" struct LaunchParams {

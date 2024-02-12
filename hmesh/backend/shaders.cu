@@ -1,6 +1,7 @@
 
 #include "LaunchParams.h"
 #include "optix_types.h"
+#include <cuda_device_runtime_api.h>
 #include <optix_device.h>
 #include <tuple>
 
@@ -30,7 +31,7 @@ extern "C" __global__ void __miss__intersectsAny() {
     *result_pt = false;
 }
 
-extern "C" __global__ void __closesthit__intersectsAny() {
+extern "C" __global__ void __anyhit__intersectsAny() {
     bool *result_pt = getPayloadPointer<bool>();
     *result_pt = true;
 }
@@ -45,7 +46,7 @@ extern "C" __global__ void __raygen__intersectsAny() {
     float3 ray_dir = launchParams.rays.directions[idx];
     // result pointer
     auto [u0, u1] = setPayloadPointer(&isect_result);
-    optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,
+    optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
                OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
     launchParams.results.hit[idx] = isect_result;
 }
@@ -72,13 +73,13 @@ extern "C" __global__ void __raygen__intersectsFirst() {
     float3 ray_dir = launchParams.rays.directions[idx];
     // result pointer
     auto [u0, u1] = setPayloadPointer(&ch_idx);
-    optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,
-               OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
+    optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
+               OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 0, 0,
+               u0, u1);
     launchParams.results.triIdx[idx] = ch_idx;
 }
 
 // intersects_closest
-// todo
 
 struct WBData {
     bool hit;
@@ -102,12 +103,11 @@ extern "C" __global__ void __closesthit__intersectsClosest() {
     float2 uv = optixGetTriangleBarycentrics();
     int triIdx = optixGetPrimitiveIndex();
     float3 verts[3];
-    optixGetTriangleVertexData(launchParams.traversable, triIdx, 0, 0,
-                               verts);
+    optixGetTriangleVertexData(launchParams.traversable, triIdx, 0, 0, verts);
     float3 isectLoc = {
-        uv.x * verts[0].x + uv.y * verts[1].x + (1 - uv.x - uv.y) * verts[2].x,
-        uv.x * verts[0].y + uv.y * verts[1].y + (1 - uv.x - uv.y) * verts[2].y,
-        uv.x * verts[0].z + uv.y * verts[1].z + (1 - uv.x - uv.y) * verts[2].z};
+        uv.x * verts[1].x + uv.y * verts[2].x + (1 - uv.x - uv.y) * verts[0].x,
+        uv.x * verts[1].y + uv.y * verts[2].y + (1 - uv.x - uv.y) * verts[0].y,
+        uv.x * verts[1].z + uv.y * verts[2].z + (1 - uv.x - uv.y) * verts[0].z};
 
     result->triIdx = triIdx;
     result->uv = uv;
@@ -125,14 +125,92 @@ extern "C" __global__ void __raygen__intersectsClosest() {
     float3 ray_dir = launchParams.rays.directions[idx];
     // result pointer
     auto [u0, u1] = setPayloadPointer(&wbdata);
-    optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,
-               OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
+    optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
+               OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 0, 0,
+               u0, u1);
     // write back to the buffers
     launchParams.results.hit[idx] = wbdata.hit;
     launchParams.results.front[idx] = wbdata.front;
     launchParams.results.location[idx] = wbdata.loc;
     launchParams.results.triIdx[idx] = wbdata.triIdx;
     launchParams.results.uv[idx] = wbdata.uv;
+}
+
+// intersects_location
+
+extern "C" __global__ void __anyhit__intersectsLocationFirstPass() {
+    int *hitCount = getPayloadPointer<int>();
+    // it seems we don't need atomic ops as they are not parallel
+    (*hitCount)++;
+    optixIgnoreIntersection();
+}
+
+extern "C" __global__ void __raygen__intersectsLocationFirstPass() {
+    // thread index, ranging in [0, N)
+    int idx = optixGetLaunchIndex().x;
+    int hitCount = 0;
+    // ray info
+    float3 ray_origin = launchParams.rays.origins[idx];
+    float3 ray_dir = launchParams.rays.directions[idx];
+    // result pointer
+    auto [u0, u1] = setPayloadPointer(&hitCount);
+    optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
+               OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
+    launchParams.results.hitCount[idx] = hitCount;
+}
+
+struct IsectLocWBTerm {
+    int triIdx;
+    float3 loc;
+}; // 16B
+
+struct IsectLocPayload {
+    IsectLocWBTerm terms[MAX_ANYHIT_SIZE];
+    int hitCount;
+    int globalIdx;
+};
+
+extern "C" __global__ void __anyhit__intersectsLocationSecondPass() {
+    IsectLocPayload *payload = getPayloadPointer<IsectLocPayload>();
+    if (payload->hitCount >= MAX_ANYHIT_SIZE)
+        return;
+    int localidx = payload->hitCount;
+    payload->hitCount++;
+    float2 uv = optixGetTriangleBarycentrics();
+    int triIdx = optixGetPrimitiveIndex();
+    float3 verts[3];
+    optixGetTriangleVertexData(launchParams.traversable, triIdx, 0, 0, verts);
+    float3 isectLoc = {
+        uv.x * verts[1].x + uv.y * verts[2].x + (1 - uv.x - uv.y) * verts[0].x,
+        uv.x * verts[1].y + uv.y * verts[2].y + (1 - uv.x - uv.y) * verts[0].y,
+        uv.x * verts[1].z + uv.y * verts[2].z + (1 - uv.x - uv.y) * verts[0].z};
+    payload->terms[localidx].loc = isectLoc;
+    payload->terms[localidx].triIdx = triIdx;
+    optixIgnoreIntersection();
+}
+
+extern "C" __global__ void __raygen__intersectsLocationSecondPass() {
+    // thread index, ranging in [0, N)
+    int idx = optixGetLaunchIndex().x;
+    int hitCount = launchParams.rays.hitCounts[idx];
+    int globalIdx = launchParams.rays.globalIdx[idx];
+    IsectLocPayload payload = {};
+    payload.hitCount = 0;
+    payload.globalIdx = globalIdx;
+    // ray info
+    float3 ray_origin = launchParams.rays.origins[idx];
+    float3 ray_dir = launchParams.rays.directions[idx];
+    // result pointer
+    auto [u0, u1] = setPayloadPointer(&payload);
+    optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
+               OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
+    // fill global buffer
+    printf("idx: %d, hitcount: %d, globalIdx: %d\n", idx, hitCount, globalIdx);
+    for (int i = 0; i < hitCount; i++) {
+        launchParams.results.rayIdx[globalIdx + i] = idx;
+        launchParams.results.triIdx[globalIdx + i] = payload.terms[i].triIdx;
+        launchParams.results.location[globalIdx + i] = payload.terms[i].loc;
+    }
 }
 
 } // namespace hmesh

@@ -63,6 +63,15 @@ class RayMeshIntersector:
         else:
             return hit, front, tri_idx, loc, uv
 
+    def intersects_location(
+        self,
+        origins: Float32[torch.Tensor, "*b 3"],
+        directions: Float32[torch.Tensor, "*b 3"],
+    ) -> Tuple[
+        Float32[torch.Tensor, "h 3"], Int32[torch.Tensor, "h"], Int32[torch.Tensor, "h"]
+    ]:
+        return hops.intersects_location(self.as_wrapper, origins, directions)
+
 
 class OptixAccelStructureWrapper:
     def __init__(self):

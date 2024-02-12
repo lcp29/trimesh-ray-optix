@@ -5,7 +5,14 @@
 #include <string>
 #include <tuple>
 
-enum SBTType { INTERSECTS_ANY, INTERSECTS_FIRST, INTERSECTS_CLOSEST, count };
+enum SBTType {
+    INTERSECTS_ANY,
+    INTERSECTS_FIRST,
+    INTERSECTS_CLOSEST,
+    INTERSECTS_LOCATION_FIRST_PASS,
+    INTERSECTS_LOCATION_SECOND_PASS,
+    count
+};
 
 // if the function contains such program
 #define ProgramMask int
@@ -27,9 +34,11 @@ enum SBTType { INTERSECTS_ANY, INTERSECTS_FIRST, INTERSECTS_CLOSEST, count };
 #define PRG_EX 1 << 7
 
 const std::tuple<std::string, ProgramMask> programInfos[] = {
-    {"intersectsAny", PRG_RG | PRG_CH | PRG_MS},
+    {"intersectsAny", PRG_RG | PRG_AH | PRG_MS},
     {"intersectsFirst", PRG_RG | PRG_CH | PRG_MS},
-    {"intersectsClosest", PRG_RG | PRG_CH | PRG_MS}};
+    {"intersectsClosest", PRG_RG | PRG_CH | PRG_MS},
+    {"intersectsLocationFirstPass", PRG_RG | PRG_AH},
+    {"intersectsLocationSecondPass", PRG_RG | PRG_AH}};
 
 template <typename T> struct SBTRecord {
     __align__(

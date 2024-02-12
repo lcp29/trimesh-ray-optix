@@ -7,6 +7,7 @@
 
 #include "ray.h"
 #include "ATen/core/TensorBody.h"
+#include "ATen/ops/where.h"
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
 #include "base.h"
@@ -33,7 +34,7 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
                               OPTIX_BUILD_FLAG_ALLOW_COMPACTION |
                               OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS;
     buildOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
-    buildOptions.motionOptions.numKeys = 1;
+    buildOptions.motionOptions.numKeys = 0;
 
     CUdeviceptr pVert = (CUdeviceptr)vertices.data_ptr();
     CUdeviceptr pFace = (CUdeviceptr)faces.data_ptr();
@@ -54,7 +55,8 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     buildInput.triangleArray.sbtIndexOffsetSizeInBytes = 0;
     buildInput.triangleArray.sbtIndexOffsetStrideInBytes = 0;
 
-    uint32_t triangleBuildFlags = 0;
+    uint32_t triangleBuildFlags =
+        OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;
     buildInput.triangleArray.flags = &triangleBuildFlags;
 
     OptixAccelBufferSizes bufferSizes = {};
@@ -263,6 +265,65 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
 
     lpBuffer.free();
     return {hitbuf, frontbuf, tibuf, locbuf, uvbuf};
+}
+
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
+intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
+                   torch::Tensor directions) {
+    if (!tensorInputCheck(origins, directions))
+        return {};
+    // first pass - get the intersection count
+    auto hitCountBufSize = removeLastDim(origins.sizes());
+    auto hitCountBufOptions =
+        torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
+    auto hitCountBuf =
+        torch::zeros(hitCountBufSize, hitCountBufOptions).contiguous();
+    auto nray = prod(hitCountBufSize);
+
+    LaunchParams lp = {};
+    lp.rays.nray = nray;
+    lp.rays.origins = data_ptr<float3>(origins);
+    lp.rays.directions = data_ptr<float3>(directions);
+    lp.results.hitCount = data_ptr<int>(hitCountBuf);
+    lp.traversable = as.asHandle;
+
+    CUDABuffer lpBuffer;
+    lpBuffer.alloc_and_upload(&lp, 1);
+
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_LOCATION_FIRST_PASS],
+                cuStream, lpBuffer.d_pointer(), sizeof(lp),
+                &sbts[SBTType::INTERSECTS_LOCATION_FIRST_PASS], nray, 1, 1);
+
+    // second pass
+    hitCountBuf = hitCountBuf.flatten();
+    hitCountBuf = torch::where(hitCountBuf <= MAX_ANYHIT_SIZE, hitCountBuf,
+                               MAX_ANYHIT_SIZE);
+    auto globalIdxBuf = hitCountBuf.cumsum(0);
+    auto nhits = globalIdxBuf[-1].item<int>();
+    globalIdxBuf = torch::cat({torch::zeros({1}, hitCountBufOptions),
+                               torch::slice(hitCountBuf, 0, 0, -1)});
+    // hit location
+    auto locbufOptions =
+        torch::TensorOptions().dtype(torch::kFloat).device(torch::kCUDA);
+    auto locbuf = torch::empty({nhits, 3}, locbufOptions);
+    auto idxbufOptions =
+        torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
+    auto tibuf = torch::empty({nhits}, idxbufOptions);
+    auto ribuf = torch::empty({nhits}, idxbufOptions);
+
+    lp.rays.hitCounts = data_ptr<int>(hitCountBuf);
+    lp.rays.globalIdx = data_ptr<int>(globalIdxBuf);
+    lp.results.location = data_ptr<float3>(locbuf);
+    lp.results.triIdx = data_ptr<int>(tibuf);
+    lp.results.rayIdx = data_ptr<int>(ribuf);
+
+    lpBuffer.upload(&lp, 1);
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_LOCATION_SECOND_PASS],
+                cuStream, lpBuffer.d_pointer(), sizeof(lp),
+                &sbts[SBTType::INTERSECTS_LOCATION_SECOND_PASS], nray, 1, 1);
+
+    lpBuffer.free();
+    return {locbuf, ribuf, tibuf};
 }
 
 } // namespace hmesh

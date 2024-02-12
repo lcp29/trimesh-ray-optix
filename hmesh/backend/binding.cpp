@@ -17,6 +17,9 @@ extern std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor,
                   torch::Tensor>
 intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
                   torch::Tensor directions);
+extern std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
+intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
+                   torch::Tensor directions);
 extern void createPipelines();
 extern void buildSBT();
 
@@ -44,4 +47,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("intersectsClosest", &hmesh::intersectsClosest,
           "Find if ray hits any triangle and return ray index, triangle index, "
           "hit location and uv.");
+    m.def("intersectsLocation", &hmesh::intersectsLocation,
+          "Find all intersection locations.");
 }
