@@ -138,8 +138,8 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.rays.origins = origins.data_ptr<float>();
-    lp.rays.directions = directions.data_ptr<float>();
+    lp.rays.origins = (float3*)origins.data_ptr();
+    lp.rays.directions = (float3*)directions.data_ptr();
     lp.rays.nray = nray;
     lp.traversable = as.asHandle;
     lp.results.hit = result.data_ptr<bool>();
@@ -168,8 +168,8 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.rays.origins = origins.data_ptr<float>();
-    lp.rays.directions = directions.data_ptr<float>();
+    lp.rays.origins = (float3*)origins.data_ptr();
+    lp.rays.directions = (float3*)directions.data_ptr();
     lp.rays.nray = nray;
     lp.traversable = as.asHandle;
     lp.results.triIdx = result.data_ptr<int>();

@@ -39,8 +39,8 @@ extern "C" __global__ void __raygen__intersectsAny() {
     // intersection result, to be overwritten by the shader
     bool isect_result = false;
     // ray info
-    float3 ray_origin = *(float3 *)(launchParams.rays.origins + idx * 3);
-    float3 ray_dir = *(float3 *)(launchParams.rays.directions + idx * 3);
+    float3 ray_origin = launchParams.rays.origins[idx];
+    float3 ray_dir = launchParams.rays.directions[idx];
     // result pointer
     auto [u0, u1] = setPayloadPointer(&isect_result);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,
@@ -66,8 +66,8 @@ extern "C" __global__ void __raygen__intersectsFirst() {
     // first hit triangle index, to be overwritten by the shader
     int ch_idx = -1;
     // ray info
-    float3 ray_origin = *(float3 *)(launchParams.rays.origins + idx * 3);
-    float3 ray_dir = *(float3 *)(launchParams.rays.directions + idx * 3);
+    float3 ray_origin = launchParams.rays.origins[idx];
+    float3 ray_dir = launchParams.rays.directions[idx];
     // result pointer
     auto [u0, u1] = setPayloadPointer(&ch_idx);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,
@@ -77,6 +77,13 @@ extern "C" __global__ void __raygen__intersectsFirst() {
 
 // intersects_closest
 // todo
+
+struct WBData {
+    bool hit;
+    int triIdx;
+    float3 loc;
+};
+
 extern "C" __global__ void __miss__intersectsClosest() {
     int *result_pt = getPayloadPointer<int>();
     *result_pt = -1;
@@ -90,18 +97,14 @@ extern "C" __global__ void __closesthit__intersectsClosest() {
 extern "C" __global__ void __raygen__intersectsClosest() {
     // thread index, ranging in [0, N)
     int idx = optixGetLaunchIndex().x;
-    // first hit triangle index, to be overwritten by the shader
-    int ch_idx = -1;
+    WBData wbdata;
     // ray info
     float3 ray_origin = *(float3 *)(launchParams.rays.origins + idx * 3);
     float3 ray_dir = *(float3 *)(launchParams.rays.directions + idx * 3);
     // result pointer
-    auto [u0, u1] = setPayloadPointer(&ch_idx);
+    auto [u0, u1] = setPayloadPointer(&wbdata);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 1e-4, 1e7, 0,
                OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
-    launchParams.results.triIdx[idx] = ch_idx;
 }
-
-// todo assign each optix thread a output position then **stream compact**
 
 } // namespace hmesh
