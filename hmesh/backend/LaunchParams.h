@@ -18,6 +18,7 @@ struct LPResult {
     float3 *location;
     int *triIdx;
     bool *hit;
+    bool *front;
     float2 *uv;
 };
 

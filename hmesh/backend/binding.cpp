@@ -13,6 +13,10 @@ extern torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
 extern torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
                                      const torch::Tensor &origins,
                                      const torch::Tensor &dirs);
+extern std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor,
+                  torch::Tensor>
+intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
+                  torch::Tensor directions);
 extern void createPipelines();
 extern void buildSBT();
 
@@ -37,4 +41,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
           "Find out if each ray hit any triangle on the mesh.");
     m.def("intersectsFirst", &hmesh::intersectsFirst,
           "Find the index of the first triangle a ray hits.");
+    m.def("intersectsClosest", &hmesh::intersectsClosest,
+          "Find if ray hits any triangle and return ray index, triangle index, "
+          "hit location and uv.");
 }

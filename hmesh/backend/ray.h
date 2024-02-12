@@ -20,5 +20,9 @@ extern torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
 extern torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
                                      const torch::Tensor &origins,
                                      const torch::Tensor &dirs);
+extern std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor,
+                  torch::Tensor>
+intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
+                  torch::Tensor directions);
 
 } // namespace hmesh

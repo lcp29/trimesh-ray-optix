@@ -7,7 +7,6 @@
 
 #include "ray.h"
 #include "ATen/core/TensorBody.h"
-#include "ATen/ops/empty.h"
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
 #include "base.h"
@@ -30,8 +29,9 @@ void OptixAccelStructureWrapperCPP::buildAccelStructure(torch::Tensor vertices,
     // CUdeviceptr tempBuffer, outputBuffer;
     size_t tempBufferSizeInBytes, outputBufferSizeInBytes;
 
-    buildOptions.buildFlags =
-        OPTIX_BUILD_FLAG_NONE | OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
+    buildOptions.buildFlags = OPTIX_BUILD_FLAG_NONE |
+                              OPTIX_BUILD_FLAG_ALLOW_COMPACTION |
+                              OPTIX_BUILD_FLAG_ALLOW_RANDOM_VERTEX_ACCESS;
     buildOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
     buildOptions.motionOptions.numKeys = 1;
 
@@ -118,22 +118,26 @@ template <typename... Ts> inline bool tensorInputCheck(Ts... ts) {
     return valid;
 }
 
-inline c10::IntArrayRef removeLastDim(const c10::IntArrayRef dims) {
-    return dims.slice(0, dims.size() - 1);
+inline std::vector<long> removeLastDim(const c10::IntArrayRef dims) {
+    auto ref = dims.vec();
+    ref.pop_back();
+    return ref;
 }
 
-inline size_t prod(const c10::IntArrayRef &dims) {
+inline size_t prod(const std::vector<long> &dims) {
     size_t p = 1;
-    for (int i = 0; i < dims.size(); i++)
-        p *= dims[i];
+    for (auto s : dims)
+        p *= s;
     return p;
 }
 
-inline c10::IntArrayRef changeLastDim(const c10::IntArrayRef dims,
-                                      size_t value) {
-    auto dimsVec = dims.vec();
-    *(dimsVec.end()) = value;
-    return c10::IntArrayRef(dimsVec);
+inline std::vector<long> changeLastDim(const c10::IntArrayRef dims,
+                                       size_t value) {
+    std::vector<long> dimsVec;
+    for (auto s : dims)
+        dimsVec.push_back(s);
+    *(dimsVec.end() - 1) = value;
+    return dimsVec;
 }
 
 template <typename T> inline T *data_ptr(torch::Tensor t) {
@@ -195,15 +199,17 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
 }
 
 /**
- * @brief Returns the closest inte
+ * @brief Find if ray hits any triangle and return ray index, triangle index,
+ * hit location and uv.
  *
  * @param as
  * @param origins
  * @param directions
  * @return std::tuple<torch::Tensor, torch::Tensor, torch::Tensor,
- * torch::Tensor>
+ * torch::Tensor, torch::Tensor>
  */
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor,
+           torch::Tensor>
 intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
                   torch::Tensor directions) {
     if (!tensorInputCheck(origins, directions))
@@ -214,6 +220,8 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
         torch::TensorOptions().dtype(torch::kBool).device(torch::kCUDA);
     auto hitbufSize = removeLastDim(origins.sizes());
     auto hitbuf = torch::empty(hitbufSize, hitbufOptions);
+    // front hit buffer
+    auto frontbuf = torch::empty(hitbufSize, hitbufOptions);
     // triangle index buffer
     auto tibufOptions =
         torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
@@ -229,7 +237,6 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
         torch::TensorOptions().dtype(torch::kFloat).device(torch::kCUDA);
     auto uvbufSize = changeLastDim(origins.sizes(), 2);
     auto uvbuf = torch::empty(uvbufSize, uvbufOptions);
-
     auto nray = prod(hitbufSize);
 
     // fill and upload launchParams
@@ -242,6 +249,9 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
     lp.results.location = data_ptr<float3>(locbuf);
     lp.results.triIdx = data_ptr<int>(tibuf);
     lp.results.uv = data_ptr<float2>(uvbuf);
+    lp.results.front = data_ptr<bool>(frontbuf);
+
+    lp.traversable = as.asHandle;
 
     CUDABuffer lpBuffer;
     lpBuffer.alloc_and_upload(&lp, 1);
@@ -252,7 +262,7 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
                 &sbts[SBTType::INTERSECTS_CLOSEST], nray, 1, 1);
 
     lpBuffer.free();
-    return {hitbuf, tibuf, locbuf, uvbuf};
+    return {hitbuf, frontbuf, tibuf, locbuf, uvbuf};
 }
 
 } // namespace hmesh
