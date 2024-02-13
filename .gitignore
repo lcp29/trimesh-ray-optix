@@ -1,6 +1,6 @@
 .vscode
 *.egg-info
 __pycache__
-hmesh/backend/embedded/shaders.optixir
-hmesh/backend/embedded/shaders_embedded.h
+triro/backend/embedded/shaders.optixir
+triro/backend/embedded/shaders_embedded.h
 build/
