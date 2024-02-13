@@ -4,11 +4,11 @@ Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation us
 
 ## 🔧️ Installation
 ```sh
-pip install xxx
+pip install git+https://github.com/lcp29/trimesh-ray-optix
 ```
 or
 ```sh
-git clone xxx
+git clone https://github.com/lcp29/trimesh-ray-optix
 cd triro
 pip install .
 ```
