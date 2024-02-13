@@ -34,7 +34,7 @@ class RayMeshIntersector:
         self,
         origins: Float32[torch.Tensor, "*b 3"],
         directions: Float32[torch.Tensor, "*b 3"],
-    ) -> Bool[torch.Tensor, "*b"]:
+    ) -> Int32[torch.Tensor, "*b"]:
         return hops.intersects_first(self.as_wrapper, origins, directions)
 
     def intersects_closest(

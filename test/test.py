@@ -15,22 +15,20 @@ print(r.intersects_first(o, d))
 s = trimesh.creation.icosphere()
 sr = RayMeshIntersector(s)
 x, y = torch.meshgrid(
-    [torch.linspace(-1, 1, 1280), torch.linspace(-1, 1, 1280)], indexing="ij"
+    [torch.linspace(-1, 1, 800), torch.linspace(-1, 1, 800)], indexing="ij"
 )
 
 z = -torch.ones_like(x)
 
-dirs = torch.stack([x, -y, z], dim=-1).float().cuda().contiguous()
-origin = torch.Tensor([[0, 0, 3]]).float().cuda().broadcast_to(dirs.shape).contiguous()
+dirs = torch.stack([x, -y, z], dim=-1).cuda().contiguous()
+origin = torch.Tensor([[0, 0, 3]]).cuda().broadcast_to(dirs.shape).contiguous()
 
-result = sr.intersects_closest(origin, dirs, True)
-loc = torch.zeros([*result[0].shape, 3]).cuda().float()
-loc_flat = loc.reshape(-1, 3)
-loc_flat = loc_flat.scatter(
-    dim=0, index=result[2].long()[..., None].expand_as(result[4]), src=result[4]
+hit, front, ray_idx, tri_idx, location, uv = sr.intersects_closest(
+    origin, dirs, stream_compaction=True
 )
-loc = loc_flat.reshape_as(loc)
-print(result[1])
+loc = torch.zeros([*hit.shape, 3]).cuda().float()
+loc[hit] = location
+print(front)
 plt.imshow(loc.cpu())
 plt.show()
 
@@ -51,4 +49,4 @@ d = torch.Tensor([[0, 0, 1], [0, 0, -1]]).cuda()
 r = RayMeshIntersector(m)
 print(r.intersects_location(o, d))
 print(r.intersects_count(o, d))
-print(sr.contains_points(torch.Tensor([[0,0,0.999]]).cuda()))
+print(sr.contains_points(torch.Tensor([[0, 0, 0.999]]).cuda()))
