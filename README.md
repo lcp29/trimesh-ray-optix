@@ -3,6 +3,11 @@
 Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation using NVIDIA Optix.
 
 ## 🔧️ Installation
+First
+```sh
+export OptiX_INSTALL_DIR = <Your Optix SDK install location>
+```
+Then
 ```sh
 pip install git+https://github.com/lcp29/trimesh-ray-optix
 ```
