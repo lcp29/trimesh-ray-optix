@@ -1,4 +1,4 @@
-# triro - An in-place replacement for trimesh.ray in Optix
+# Triro - An in-place replacement for trimesh.ray in Optix
 
 Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation using NVIDIA Optix.
 
@@ -14,7 +14,7 @@ pip install git+https://github.com/lcp29/trimesh-ray-optix
 or
 ```sh
 git clone https://github.com/lcp29/trimesh-ray-optix
-cd triro
+cd trimesh-ray-optix
 pip install .
 ```
 ## 📖️ Example
