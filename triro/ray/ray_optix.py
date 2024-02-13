@@ -2,7 +2,7 @@ import torch
 import trimesh
 from typing import Tuple, Optional
 from jaxtyping import Float32, Int32, Bool
-import hmesh.backend.ops as hops
+import triro.backend.ops as hops
 
 
 class RayMeshIntersector:

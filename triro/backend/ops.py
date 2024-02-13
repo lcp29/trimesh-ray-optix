@@ -4,7 +4,7 @@ from typing import Tuple
 from jaxtyping import Float32, Bool, Int32
 import importlib
 import torch.utils.cpp_extension
-from hmesh.ray.ray_optix import OptixAccelStructureWrapper
+from triro.ray.ray_optix import OptixAccelStructureWrapper
 
 hmesh_module = None
 
@@ -15,7 +15,7 @@ def get_module():
         return hmesh_module
     # compile module
     # source file
-    source_files = ["base.cpp", "binding.cpp", "ray.cpp", "program.cpp"]
+    source_files = ["base.cpp", "binding.cpp", "ray.cpp"]
     # optix install location
     optix_install_dir = os.environ["OptiX_INSTALL_DIR"]
     # include optix
@@ -25,14 +25,14 @@ def get_module():
     # full source path
     source_paths = [os.path.join(os.path.dirname(__file__), fn) for fn in source_files]
     torch.utils.cpp_extension.load(
-        name="hmesh",
+        name="triro",
         sources=source_paths,
         extra_cflags=cflags,
         extra_ldflags=ldflags,
         with_cuda=True,
         verbose=False,
     )
-    hmesh_module = importlib.import_module("hmesh")
+    hmesh_module = importlib.import_module("triro")
     return hmesh_module
 
 

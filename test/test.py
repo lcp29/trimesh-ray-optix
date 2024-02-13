@@ -1,7 +1,7 @@
 import torch
 import trimesh
 import matplotlib.pyplot as plt
-from hmesh.ray.ray_optix import RayMeshIntersector
+from triro.ray.ray_optix import RayMeshIntersector
 
 f = torch.Tensor([[0.5, -0.5, 0], [0, 0.5, 0], [-0.5, -0.5, 0]])
 i = torch.Tensor([[0, 1, 2]]).int()

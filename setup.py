@@ -1,13 +1,13 @@
 
 import os
-import hmesh
+import triro
 import subprocess
 import setuptools
 
 with open('README.md', 'r') as f:
     long_descriprion = f.read()
 
-SHADER_LOCATION = 'hmesh/backend/shaders.cu'
+SHADER_LOCATION = 'triro/backend/shaders.cu'
 SHADER_DIR = os.path.dirname(SHADER_LOCATION)
 SHADER_BASENAME = os.path.basename(SHADER_LOCATION)
 SHADER_WORK_DIR = os.path.join(SHADER_DIR, 'embedded')
@@ -60,17 +60,17 @@ def compile_and_embed_shaders():
 compile_and_embed_shaders()
 
 setuptools.setup(
-    name='hmesh',
-    version=hmesh.__version__,
+    name='triro',
+    version=triro.__version__,
     author='helmholtz',
     author_email='helmholtz@fomal.host',
-    description='hmesh - CUDA mesh utilities for trimesh and torch',
+    description='triro - An in-place replacement for trimesh.ray in Optix',
     long_description=long_descriprion,
     long_descriprion_content_type='text/markdown',
     url='',
     packages=setuptools.find_packages(),
     package_data={
-        'hmesh': [
+        'triro': [
             'backend/embedded/shaders_embedded.h',
             'backend/*.cpp',
             'backend/*.h',

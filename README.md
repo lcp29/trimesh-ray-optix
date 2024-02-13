@@ -1,1 +1,1 @@
-# hmesh
+# triro - An in-place replacement for trimesh.ray in Optix

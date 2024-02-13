@@ -1,5 +1,5 @@
 
-import hmesh.backend.ops as hops
+import triro.backend.ops as hops
 
 # initialize optix
 hops.init_optix()
