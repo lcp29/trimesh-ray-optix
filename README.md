@@ -5,7 +5,7 @@ Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation us
 ## 🔧️ Installation
 First
 ```sh
-export OptiX_INSTALL_DIR = <Your Optix SDK install location>
+export OptiX_INSTALL_DIR=<Your Optix SDK install location>
 ```
 Then
 ```sh
