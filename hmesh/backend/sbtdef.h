@@ -2,6 +2,7 @@
 
 #include "device_types.h"
 #include "optix_types.h"
+#include "type.h"
 #include <string>
 #include <tuple>
 
@@ -9,13 +10,13 @@ enum SBTType {
     INTERSECTS_ANY,
     INTERSECTS_FIRST,
     INTERSECTS_CLOSEST,
-    INTERSECTS_LOCATION_FIRST_PASS,
-    INTERSECTS_LOCATION_SECOND_PASS,
+    INTERSECTS_COUNT,
+    INTERSECTS_LOCATION,
     count
 };
 
 // if the function contains such program
-#define ProgramMask int
+using ProgramMask = int;
 // ray generation
 #define PRG_RG 1
 // intersection
@@ -37,8 +38,8 @@ const std::tuple<std::string, ProgramMask> programInfos[] = {
     {"intersectsAny", PRG_RG | PRG_AH | PRG_MS},
     {"intersectsFirst", PRG_RG | PRG_CH | PRG_MS},
     {"intersectsClosest", PRG_RG | PRG_CH | PRG_MS},
-    {"intersectsLocationFirstPass", PRG_RG | PRG_AH},
-    {"intersectsLocationSecondPass", PRG_RG | PRG_AH}};
+    {"intersectsCount", PRG_RG | PRG_AH},
+    {"intersectsLocation", PRG_RG | PRG_AH}};
 
 template <typename T> struct SBTRecord {
     __align__(

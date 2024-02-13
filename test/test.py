@@ -31,8 +31,8 @@ loc_flat = loc_flat.scatter(
 )
 loc = loc_flat.reshape_as(loc)
 print(result[1])
-#plt.imshow(loc.cpu())
-#plt.show()
+plt.imshow(loc.cpu())
+plt.show()
 
 f = torch.Tensor(
     [
@@ -50,3 +50,5 @@ o = torch.Tensor([[0, 0, -4], [0, 0.1, 4]]).cuda()
 d = torch.Tensor([[0, 0, 1], [0, 0, -1]]).cuda()
 r = RayMeshIntersector(m)
 print(r.intersects_location(o, d))
+print(r.intersects_count(o, d))
+print(sr.contains_points(torch.Tensor([[0,0,0.999]]).cuda()))

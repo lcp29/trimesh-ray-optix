@@ -267,9 +267,8 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
     return {hitbuf, frontbuf, tibuf, locbuf, uvbuf};
 }
 
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
-intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
-                   torch::Tensor directions) {
+torch::Tensor intersectsCount(OptixAccelStructureWrapperCPP as,
+                              torch::Tensor origins, torch::Tensor directions) {
     if (!tensorInputCheck(origins, directions))
         return {};
     // first pass - get the intersection count
@@ -290,17 +289,31 @@ intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
     CUDABuffer lpBuffer;
     lpBuffer.alloc_and_upload(&lp, 1);
 
-    optixLaunch(optixPipelines[SBTType::INTERSECTS_LOCATION_FIRST_PASS],
-                cuStream, lpBuffer.d_pointer(), sizeof(lp),
-                &sbts[SBTType::INTERSECTS_LOCATION_FIRST_PASS], nray, 1, 1);
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_COUNT], cuStream,
+                lpBuffer.d_pointer(), sizeof(lp),
+                &sbts[SBTType::INTERSECTS_COUNT], nray, 1, 1);
+
+    lpBuffer.free();
+    return hitCountBuf;
+}
+
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
+intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
+                   torch::Tensor directions) {
+    if (!tensorInputCheck(origins, directions))
+        return {};
+    // first pass - get the intersection count
+    auto hitCountBuf = intersectsCount(as, origins, directions);
 
     // second pass
     hitCountBuf = hitCountBuf.flatten();
     hitCountBuf = torch::where(hitCountBuf <= MAX_ANYHIT_SIZE, hitCountBuf,
                                MAX_ANYHIT_SIZE);
     auto globalIdxBuf = hitCountBuf.cumsum(0);
+    auto globalIdxBufOptions =
+        torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
     auto nhits = globalIdxBuf[-1].item<int>();
-    globalIdxBuf = torch::cat({torch::zeros({1}, hitCountBufOptions),
+    globalIdxBuf = torch::cat({torch::zeros({1}, globalIdxBufOptions),
                                torch::slice(hitCountBuf, 0, 0, -1)});
     // hit location
     auto locbufOptions =
@@ -311,16 +324,26 @@ intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
     auto tibuf = torch::empty({nhits}, idxbufOptions);
     auto ribuf = torch::empty({nhits}, idxbufOptions);
 
+    auto nray = prod(removeLastDim(origins.sizes()));
+
+    LaunchParams lp = {};
+    lp.traversable = as.asHandle;
+    lp.rays.nray = nray;
+    lp.rays.origins = data_ptr<float3>(origins);
+    lp.rays.directions = data_ptr<float3>(directions);
     lp.rays.hitCounts = data_ptr<int>(hitCountBuf);
     lp.rays.globalIdx = data_ptr<int>(globalIdxBuf);
+    lp.results.hitCount = data_ptr<int>(hitCountBuf);
     lp.results.location = data_ptr<float3>(locbuf);
     lp.results.triIdx = data_ptr<int>(tibuf);
     lp.results.rayIdx = data_ptr<int>(ribuf);
 
-    lpBuffer.upload(&lp, 1);
-    optixLaunch(optixPipelines[SBTType::INTERSECTS_LOCATION_SECOND_PASS],
+    CUDABuffer lpBuffer;
+    lpBuffer.alloc_and_upload(&lp, 1);
+
+    optixLaunch(optixPipelines[SBTType::INTERSECTS_LOCATION],
                 cuStream, lpBuffer.d_pointer(), sizeof(lp),
-                &sbts[SBTType::INTERSECTS_LOCATION_SECOND_PASS], nray, 1, 1);
+                &sbts[SBTType::INTERSECTS_LOCATION], nray, 1, 1);
 
     lpBuffer.free();
     return {locbuf, ribuf, tibuf};

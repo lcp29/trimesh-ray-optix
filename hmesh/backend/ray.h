@@ -24,6 +24,9 @@ extern std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor,
                   torch::Tensor>
 intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
                   torch::Tensor directions);
+extern torch::Tensor intersectsCount(OptixAccelStructureWrapperCPP as,
+                                     torch::Tensor origins,
+                                     torch::Tensor directions);
 extern std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
 intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
                    torch::Tensor directions);

@@ -85,6 +85,10 @@ def intersects_closest(
 ]:
     return get_module().intersectsClosest(accel_structure._inner, origins, dirs)
 
+def intersects_count(accel_structure: OptixAccelStructureWrapper,
+    origins: Float32[torch.Tensor, "*b 3"],
+    dirs: Float32[torch.Tensor, "*b 3"],) -> Int32[torch.Tensor, "*b"]:
+    return get_module().intersectsCount(accel_structure._inner, origins, dirs)
 
 def intersects_location(
     accel_structure: OptixAccelStructureWrapper,

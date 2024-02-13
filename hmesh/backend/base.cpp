@@ -85,7 +85,7 @@ void createPipelines() {
         const std::string intersectionName =
             std::string("__intersection__") + prgName;
         const std::string missName = std::string("__miss__") + prgName;
-        int prgMask = std::get<1>(programInfos[t]);
+        ProgramMask prgMask = std::get<1>(programInfos[t]);
         // program group descriptors
         // { RAYGEN, HITGROUP, MISS }
         OptixProgramGroupDesc pgDescs[3] = {};

@@ -138,14 +138,14 @@ extern "C" __global__ void __raygen__intersectsClosest() {
 
 // intersects_location
 
-extern "C" __global__ void __anyhit__intersectsLocationFirstPass() {
+extern "C" __global__ void __anyhit__intersectsCount() {
     int *hitCount = getPayloadPointer<int>();
     // it seems we don't need atomic ops as they are not parallel
     (*hitCount)++;
     optixIgnoreIntersection();
 }
 
-extern "C" __global__ void __raygen__intersectsLocationFirstPass() {
+extern "C" __global__ void __raygen__intersectsCount() {
     // thread index, ranging in [0, N)
     int idx = optixGetLaunchIndex().x;
     int hitCount = 0;
@@ -170,7 +170,7 @@ struct IsectLocPayload {
     int globalIdx;
 };
 
-extern "C" __global__ void __anyhit__intersectsLocationSecondPass() {
+extern "C" __global__ void __anyhit__intersectsLocation() {
     IsectLocPayload *payload = getPayloadPointer<IsectLocPayload>();
     if (payload->hitCount >= MAX_ANYHIT_SIZE)
         return;
@@ -189,7 +189,7 @@ extern "C" __global__ void __anyhit__intersectsLocationSecondPass() {
     optixIgnoreIntersection();
 }
 
-extern "C" __global__ void __raygen__intersectsLocationSecondPass() {
+extern "C" __global__ void __raygen__intersectsLocation() {
     // thread index, ranging in [0, N)
     int idx = optixGetLaunchIndex().x;
     int hitCount = launchParams.rays.hitCounts[idx];
