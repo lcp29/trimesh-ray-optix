@@ -71,6 +71,29 @@ class RayMeshIntersector:
         Float32[torch.Tensor, "h 3"], Int32[torch.Tensor, "h"], Int32[torch.Tensor, "h"]
     ]:
         return hops.intersects_location(self.as_wrapper, origins, directions)
+    
+    def intersects_id(
+            self,
+            origins: Float32[torch.Tensor, "*b, 3"],
+            directions: Float32[torch.Tensor, "*b, 3"],
+            return_locations: bool = False,
+            multiple_hits: bool = True
+    ):
+        if multiple_hits:
+            loc, ray_idx, tri_idx = hops.intersects_location(self.as_wrapper, origins, directions)
+            if return_locations:
+                return tri_idx, ray_idx, loc
+            else:
+                return tri_idx, ray_idx
+        else:
+            hit, _, tri_idx, loc, _ = hops.intersects_closest(
+                self.as_wrapper, origins, directions
+            )
+            ray_idx = torch.arange(0, hit.shape.numel()).cuda().int()[hit.reshape(-1)]
+            if return_locations:
+                return tri_idx[hit], ray_idx, loc[hit]
+            else:
+                return tri_idx[hit], ray_idx
 
 
 class OptixAccelStructureWrapper:
