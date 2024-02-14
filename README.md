@@ -3,11 +3,9 @@
 Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation using NVIDIA Optix.
 
 ## 🔧️ Installation
-
->⚠️ There are problems installing and building the shaders on Windows.
-
 First
 ```sh
+# if you are running in Windows set the system variable
 export OptiX_INSTALL_DIR=<Your Optix SDK installation directory>
 ```
 Then
