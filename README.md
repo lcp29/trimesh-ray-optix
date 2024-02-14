@@ -1,4 +1,4 @@
-# Triro - An in-place replacement for trimesh.ray in Optix
+# Triro - An in-place replacement for trimesh.ray in OptiX
 
 Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation using NVIDIA Optix.
 
