@@ -53,7 +53,7 @@ The above code generates the following result:
 ## 🕊️ TODOs
 
  - [ ] Installation on Windows
- - [ ] Other tensor layouts as input
+ - [x] Other tensor layouts as input
 
 ## 🚀️ Performance Comparison
 
