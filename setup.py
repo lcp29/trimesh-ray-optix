@@ -4,6 +4,9 @@ import triro
 import subprocess
 import setuptools
 
+if os.name == 'nt':
+    from setuptools import msvc
+
 with open('README.md', 'r') as f:
     long_descriprion = f.read()
 
@@ -34,6 +37,16 @@ def compile_and_embed_shaders():
         '-o',
         SHADER_IR_PATH
     ]
+    # should specify correct C++ compiler on Windows
+    if os.name == 'nt':
+        msvc_env = msvc.EnvironmentInfo('amd64')
+        msvc_dir_candidates = msvc_env.VCTools
+        for d in msvc_dir_candidates:
+            if 'bin' in d:
+                msvc_dir = d
+                break
+        compile_command += ['-ccbin', msvc_dir]
+
     subprocess.call(compile_command)
 
     # embed shaders
@@ -64,7 +77,7 @@ setuptools.setup(
     version=triro.__version__,
     author='helmholtz',
     author_email='helmholtz@fomal.host',
-    description='triro - An in-place replacement for trimesh.ray in Optix',
+    description='Triro - An in-place replacement for trimesh.ray in Optix',
     long_description=long_descriprion,
     long_descriprion_content_type='text/markdown',
     url='',

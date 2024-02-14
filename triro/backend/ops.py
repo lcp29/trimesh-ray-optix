@@ -21,15 +21,19 @@ def get_module():
         return triro_module
     # compile module
     # source file
-    source_files = ["base.cpp", "binding.cpp", "ray.cpp"]
+    source_files = ['base.cpp', 'binding.cpp', 'ray.cpp']
     # optix install location
-    optix_install_dir = os.environ["OptiX_INSTALL_DIR"]
+    optix_install_dir = os.environ['OptiX_INSTALL_DIR']
     # include optix
-    cflags = [f"-I{optix_install_dir}/include"]
+    cflags = [f'-I{optix_install_dir}/include']
     # link with cuda lib
-    ldflags = ["-lcuda"]
+    ldflags = ['-lcuda']
     # full source path
     source_paths = [os.path.join(os.path.dirname(__file__), fn) for fn in source_files]
+    # for windows
+    if os.name == 'nt':
+        cflags += ['/DNOMINMAX']    # avoid conflict in windows headers
+        ldflags = ['/DLL', 'cuda.lib', 'cudart.lib', 'Advapi32.lib']
     torch.utils.cpp_extension.load(
         name="triro",
         sources=source_paths,

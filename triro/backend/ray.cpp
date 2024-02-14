@@ -120,22 +120,22 @@ template <typename... Ts> inline bool tensorInputCheck(Ts... ts) {
     return valid;
 }
 
-inline std::vector<long> removeLastDim(const c10::IntArrayRef dims) {
+inline std::vector<int64_t> removeLastDim(const c10::IntArrayRef dims) {
     auto ref = dims.vec();
     ref.pop_back();
     return ref;
 }
 
-inline size_t prod(const std::vector<long> &dims) {
+inline size_t prod(const std::vector<int64_t> &dims) {
     size_t p = 1;
     for (auto s : dims)
         p *= s;
     return p;
 }
 
-inline std::vector<long> changeLastDim(const c10::IntArrayRef dims,
+inline std::vector<int64_t> changeLastDim(const c10::IntArrayRef dims,
                                        size_t value) {
-    std::vector<long> dimsVec;
+    std::vector<int64_t> dimsVec;
     for (auto s : dims)
         dimsVec.push_back(s);
     *(dimsVec.end() - 1) = value;
