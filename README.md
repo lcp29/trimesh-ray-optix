@@ -72,4 +72,4 @@ speedup: 2395x
 
 The Trimesh document is [here](https://trimesh.org/trimesh.ray.html).
 
-For detailed document see the wiki.
+For detailed document see the [wiki](wiki).
