@@ -3,9 +3,12 @@
 Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation using NVIDIA Optix.
 
 ## 🔧️ Installation
+
+>⚠️ There are problems installing and building the shaders on Windows.
+
 First
 ```sh
-export OptiX_INSTALL_DIR=<Your Optix SDK install location>
+export OptiX_INSTALL_DIR=<Your Optix SDK installation directory>
 ```
 Then
 ```sh
@@ -36,7 +39,7 @@ ray_origins = torch.Tensor([0, 0, 3]).cuda().broadcast_to(ray_directions.shape).
 
 # Optix, Launch!
 hit, front, ray_idx, tri_idx, location, uv = sr.intersects_closest(
-    ray_directions, ray_directions, stream_compaction=True
+    ray_origins, ray_directions, stream_compaction=True
 )
 
 # drawing result
@@ -48,6 +51,11 @@ plt.show()
 The above code generates the following result:
 
 ![](assets/location.png)
+
+## 🕊️ TODOs
+
+ - [ ] Installation on Windows
+ - [ ] Other tensor layouts as input
 
 ## 🚀️ Performance Comparison
 
