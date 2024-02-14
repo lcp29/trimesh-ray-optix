@@ -52,8 +52,8 @@ The above code generates the following result:
 
 ## 🕊️ TODOs
 
- - [ ] Installation on Windows
- - [x] Other tensor layouts as input
+ - [x] Installation on Windows
+ - [ ] Other tensor layouts as input
 
 ## 🚀️ Performance Comparison
 
