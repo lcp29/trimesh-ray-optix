@@ -205,7 +205,6 @@ extern "C" __global__ void __raygen__intersectsLocation() {
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
                OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 0, 0, u0, u1);
     // fill global buffer
-    printf("idx: %d, hitcount: %d, globalIdx: %d\n", idx, hitCount, globalIdx);
     for (int i = 0; i < hitCount; i++) {
         launchParams.results.rayIdx[globalIdx + i] = idx;
         launchParams.results.triIdx[globalIdx + i] = payload.terms[i].triIdx;
