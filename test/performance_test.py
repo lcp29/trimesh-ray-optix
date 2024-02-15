@@ -67,7 +67,7 @@ for i in range(CPU_ITER):
     result = mesh.ray.intersects_location(ray_origins, ray_dirs, False)
 cpu_end_time = time.time()
 cpu_time = cpu_end_time - cpu_start_time
-print(f'CPU time: {cpu_time:.3f} s / {CPU_ITER} iters')
+print(f'Trimesh & PyEmbree CPU time: {cpu_time:.3f} s / {CPU_ITER} iters')
 
 loc = torch.zeros_like(loc).reshape(-1, 3).cpu()
 loc_tight = torch.from_numpy(result[0]).float()

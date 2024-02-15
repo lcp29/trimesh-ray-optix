@@ -1,9 +1,9 @@
 # Triro - An in-place replacement for trimesh.ray in OptiX
 
-Triro is a [trimesh.ray](https://trimesh.org/trimesh.ray.html) implementation using NVIDIA Optix.
+Triro is a mesh ray tracing library implemented with NVIDIA OptiX. It has compatible interface with [trimesh.ray](https://trimesh.org/trimesh.ray.html) and provides other convenient functions.
 
 ## 🔧️ Installation
-First
+You need an OptiX SDK (>=7) installed to get to use Triro. If you are running Windows you also need an MSVC installation. First
 ```sh
 # if you are running in Windows set the system variable
 export OptiX_INSTALL_DIR=<Your Optix SDK installation directory>
@@ -19,6 +19,7 @@ cd trimesh-ray-optix
 pip install .
 ```
 ## 📖️ Example
+> ⚠️ Triro requires the tensor inputs to be contiguous in memory. You will receive an error if using any non-contiguous input.
 ```python
 import trimesh
 import matplotlib.pyplot as plt
@@ -35,7 +36,7 @@ z = -torch.ones_like(x)
 ray_directions = torch.cat([x, y, z], dim=-1).cuda().contiguous()
 ray_origins = torch.Tensor([0, 0, 3]).cuda().broadcast_to(ray_directions.shape).contiguous()
 
-# Optix, Launch!
+# OptiX, Launch!
 hit, front, ray_idx, tri_idx, location, uv = sr.intersects_closest(
     ray_origins, ray_directions, stream_compaction=True
 )
@@ -53,11 +54,11 @@ The above code generates the following result:
 ## 🕊️ TODOs
 
  - [x] Installation on Windows
- - [ ] Other tensor layouts as input
+ - [ ] Other tensor layouts as input besides `torch::kStrided`
 
 ## 🚀️ Performance Comparison
 
-Scene closest-hit ray tracing tested with i5-13490F and RTX 3090:
+Scene closest-hit ray tracing tested under Ubuntu 22.04, i5-13490F and RTX 3090 ([performance_test.py](test/performance_test.py)):
 ```
 GPU time: 8.121 s / 100000 iters
 Trimesh & PyEmbree CPU time: 19.454 s / 100 iters
@@ -70,4 +71,4 @@ speedup: 2395x
 
 The Trimesh document is [here](https://trimesh.org/trimesh.ray.html).
 
-For detailed document see [here](docs/DOC.md) or the [wiki](https://github.com/lcp29/trimesh-ray-optix/wiki).
+For detailed document see [here](docs/api.md) or the [wiki](https://github.com/lcp29/trimesh-ray-optix/wiki).
