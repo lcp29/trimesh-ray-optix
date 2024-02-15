@@ -32,6 +32,19 @@ print(front)
 plt.imshow(loc.cpu())
 plt.show()
 
+mesh_normals = torch.from_numpy(s.vertex_normals).cuda().float()
+mesh_faces = torch.from_numpy(s.faces).cuda().int()
+
+tri_v = mesh_faces[tri_idx]
+tri_norm = mesh_normals[tri_v]
+print(tri_v)
+# uv[0] -> 2nd, uv[1] -> 3rd, (1 - uv[0] - uv[1]) -> 1st
+hit_norm = uv[:, :1] * tri_norm[:, 1] + uv[:, 1:] * tri_norm[:, 2] + (1 - uv[:, :1] - uv[:, 1:]) * tri_norm[:, 0]
+loc[hit] = hit_norm
+plt.imshow(loc.cpu())
+plt.show()
+
+
 f = torch.Tensor(
     [
         [0.5, -0.5, 0],

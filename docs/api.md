@@ -51,6 +51,8 @@ Find the closest intersection for each ray.
 
 ### Returns
 
+> ⚠️ The UV coordinates returned have different convention: `uv[0]` corresponds to the second vertex and `uv[1]` correspongs to the third vertex.
+
 If `stream_compaction` is `False`:
 - `hit` (`Bool[torch.Tensor, "*b"]`): A boolean tensor indicating if each ray intersects with the mesh.
 - `front` (`Bool[torch.Tensor, "*b"]`): A boolean tensor indicating if the intersection is from the front face of the mesh.
