@@ -110,7 +110,7 @@ extern "C" __global__ void __closesthit__intersectsClosest() {
         uv.x * verts[1].z + uv.y * verts[2].z + (1 - uv.x - uv.y) * verts[0].z};
 
     result->triIdx = triIdx;
-    result->uv = uv;
+    result->uv = {1 - uv.x - uv.y, uv.x};
     result->hit = true;
     result->front = optixIsFrontFaceHit();
     result->loc = isectLoc;
