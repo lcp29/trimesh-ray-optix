@@ -55,7 +55,7 @@ The above code generates the following result:
 ## 🕊️ TODOs
 
  - [x] Installation on Windows
- - [ ] Other tensor layouts as input besides `torch::kStrided`
+ - [ ] Supporting Tensor strides
 
 ## 🚀️ Performance Comparison
 
