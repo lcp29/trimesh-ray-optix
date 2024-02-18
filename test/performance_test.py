@@ -38,7 +38,6 @@ ray_origins = (
     torch.Tensor([4.3092918e01, -2.9232937e01, 3.7687759e01])
     .cuda()
     .broadcast_to(ray_dirs.shape)
-    .contiguous()
 )
 mesh = trimesh.load('test/models/iscv2.obj', force='mesh')
 r = RayMeshIntersector(mesh)

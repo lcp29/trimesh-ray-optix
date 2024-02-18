@@ -11,6 +11,7 @@
 #include "CUDABuffer.h"
 #include "LaunchParams.h"
 #include "base.h"
+#include "c10/core/Layout.h"
 #include "c10/core/ScalarType.h"
 #include "c10/core/TensorOptions.h"
 #include "c10/util/ArrayRef.h"
@@ -19,6 +20,7 @@
 #include "optix_types.h"
 #include "sbtdef.h"
 #include "type.h"
+#include <limits>
 
 namespace hmesh {
 
@@ -109,10 +111,10 @@ template <typename... Ts> inline bool tensorInputCheck(Ts... ts) {
                           << ": input tensors must reside in cuda device.\n";
                 valid = false;
             }
-            if (!ts.is_contiguous()) {
+            if (ts.layout() != torch::kStrided) {
                 std::cerr << "error in file " << __FILE__ << " line "
                           << __LINE__
-                          << ": input tensors must be contiguous.\n";
+                          << ": input tensor layout must be torch::kStrided.\n";
                 valid = false;
             }
         }(),
@@ -142,8 +144,18 @@ inline std::vector<int64_t> changeLastDim(const c10::IntArrayRef dims,
     return dimsVec;
 }
 
-template <typename T> inline T *data_ptr(torch::Tensor t) {
+template <typename T> inline T *data_ptr(const torch::Tensor &t) {
     return (T *)t.data_ptr();
+}
+
+template <typename T>
+void fillArray(T *dst, c10::ArrayRef<T> src, T defaultValue) {
+    int i = 0;
+    const int src_size = src.size();
+    for (; i < MAX_SIZE_LENGTH - src_size; i++)
+        dst[i] = defaultValue;
+    for (; i < MAX_SIZE_LENGTH; i++)
+        dst[i] = src[i + src_size - MAX_SIZE_LENGTH];
 }
 
 torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
@@ -159,9 +171,12 @@ torch::Tensor intersectsAny(OptixAccelStructureWrapperCPP as,
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.rays.origins = data_ptr<float3>(origins);
-    lp.rays.directions = data_ptr<float3>(directions);
+    lp.rays.origins = data_ptr<float>(origins);
+    lp.rays.directions = data_ptr<float>(directions);
     lp.rays.nray = nray;
+    fillArray(lp.rays.rayShape, origins.sizes(), std::numeric_limits<long>::max());
+    fillArray(lp.rays.originsStride, origins.strides(), (long) 0);
+    fillArray(lp.rays.directionsStride, directions.strides(), (long) 0);
     lp.traversable = as.asHandle;
     lp.results.hit = data_ptr<bool>(result);
     CUDABuffer lpBuffer;
@@ -186,9 +201,12 @@ torch::Tensor intersectsFirst(OptixAccelStructureWrapperCPP as,
     auto result = torch::empty(resultSize, options);
     // fill launch params
     LaunchParams lp = {};
-    lp.rays.origins = data_ptr<float3>(origins);
-    lp.rays.directions = data_ptr<float3>(directions);
+    lp.rays.origins = data_ptr<float>(origins);
+    lp.rays.directions = data_ptr<float>(directions);
     lp.rays.nray = nray;
+    fillArray(lp.rays.rayShape, origins.sizes(), std::numeric_limits<long>::max());
+    fillArray(lp.rays.originsStride, origins.strides(), (long) 0);
+    fillArray(lp.rays.directionsStride, directions.strides(), (long) 0);
     lp.traversable = as.asHandle;
     lp.results.triIdx = data_ptr<int>(result);
     CUDABuffer lpBuffer;
@@ -244,8 +262,11 @@ intersectsClosest(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
     // fill and upload launchParams
     LaunchParams lp = {};
     lp.rays.nray = nray;
-    lp.rays.origins = data_ptr<float3>(origins);
-    lp.rays.directions = data_ptr<float3>(directions);
+    lp.rays.origins = data_ptr<float>(origins);
+    lp.rays.directions = data_ptr<float>(directions);
+    fillArray(lp.rays.rayShape, origins.sizes(), std::numeric_limits<long>::max());
+    fillArray(lp.rays.originsStride, origins.strides(), (long) 0);
+    fillArray(lp.rays.directionsStride, directions.strides(), (long) 0);
 
     lp.results.hit = data_ptr<bool>(hitbuf);
     lp.results.location = data_ptr<float3>(locbuf);
@@ -281,8 +302,11 @@ torch::Tensor intersectsCount(OptixAccelStructureWrapperCPP as,
 
     LaunchParams lp = {};
     lp.rays.nray = nray;
-    lp.rays.origins = data_ptr<float3>(origins);
-    lp.rays.directions = data_ptr<float3>(directions);
+    lp.rays.origins = data_ptr<float>(origins);
+    lp.rays.directions = data_ptr<float>(directions);
+    fillArray(lp.rays.rayShape, origins.sizes(), std::numeric_limits<long>::max());
+    fillArray(lp.rays.originsStride, origins.strides(), (long) 0);
+    fillArray(lp.rays.directionsStride, directions.strides(), (long) 0);
     lp.results.hitCount = data_ptr<int>(hitCountBuf);
     lp.traversable = as.asHandle;
 
@@ -329,10 +353,13 @@ intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
     LaunchParams lp = {};
     lp.traversable = as.asHandle;
     lp.rays.nray = nray;
-    lp.rays.origins = data_ptr<float3>(origins);
-    lp.rays.directions = data_ptr<float3>(directions);
+    lp.rays.origins = data_ptr<float>(origins);
+    lp.rays.directions = data_ptr<float>(directions);
     lp.rays.hitCounts = data_ptr<int>(hitCountBuf);
     lp.rays.globalIdx = data_ptr<int>(globalIdxBuf);
+    fillArray(lp.rays.rayShape, origins.sizes(), std::numeric_limits<long>::max());
+    fillArray(lp.rays.originsStride, origins.strides(), (long) 0);
+    fillArray(lp.rays.directionsStride, directions.strides(), (long) 0);
     lp.results.hitCount = data_ptr<int>(hitCountBuf);
     lp.results.location = data_ptr<float3>(locbuf);
     lp.results.triIdx = data_ptr<int>(tibuf);

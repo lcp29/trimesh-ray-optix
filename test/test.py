@@ -17,11 +17,11 @@ sr = RayMeshIntersector(s)
 x, y = torch.meshgrid(
     [torch.linspace(-1, 1, 800), torch.linspace(-1, 1, 800)], indexing="ij"
 )
-
 z = -torch.ones_like(x)
 
-dirs = torch.stack([x, -y, z], dim=-1).cuda().contiguous()
-origin = torch.Tensor([[0, 0, 3]]).cuda().broadcast_to(dirs.shape).contiguous()
+dirs = torch.stack([x, -y, z], dim=-1).cuda()
+print(f'dirs: {dirs.shape}, stride: {dirs.stride()}')
+origin = torch.Tensor([[0, 0, 3]]).cuda().broadcast_to(dirs.shape)
 
 hit, front, ray_idx, tri_idx, location, uv = sr.intersects_closest(
     origin, dirs, stream_compaction=True

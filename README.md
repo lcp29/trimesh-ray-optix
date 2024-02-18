@@ -20,7 +20,6 @@ cd trimesh-ray-optix
 pip install .
 ```
 ## 📖️ Example
-> ⚠️ Triro requires the tensor inputs to be contiguous in memory. You will receive an error if using any non-contiguous input.
 ```python
 import trimesh
 import matplotlib.pyplot as plt
@@ -34,8 +33,8 @@ intersector = RayMeshIntersector(mesh)
 x, y = torch.meshgrid([torch.linspace([-1, 1, 800]), 
                        torch.linspace([-1, 1, 800])], indexing='ij')
 z = -torch.ones_like(x)
-ray_directions = torch.cat([x, y, z], dim=-1).cuda().contiguous()
-ray_origins = torch.Tensor([0, 0, 3]).cuda().broadcast_to(ray_directions.shape).contiguous()
+ray_directions = torch.cat([x, y, z], dim=-1).cuda()
+ray_origins = torch.Tensor([0, 0, 3]).cuda().broadcast_to(ray_directions.shape)
 
 # OptiX, Launch!
 hit, front, ray_idx, tri_idx, location, uv = sr.intersects_closest(
@@ -55,15 +54,15 @@ The above code generates the following result:
 ## 🕊️ TODOs
 
  - [x] Installation on Windows
- - [ ] Supporting Tensor strides
+ - [x] Supporting Tensor strides
 
 ## 🚀️ Performance Comparison
 
 Scene closest-hit ray tracing tested under Ubuntu 22.04, i5-13490F and RTX 3090 ([performance_test.py](test/performance_test.py)):
 ```
-GPU time: 8.121 s / 100000 iters
-Trimesh & PyEmbree CPU time: 19.454 s / 100 iters
-speedup: 2395x
+GPU time: 8.362 s / 100000 iters
+Trimesh & PyEmbree CPU time: 18.175 s / 100 iters
+speedup: 2173x
 ```
 
 ![](assets/testcase.png)

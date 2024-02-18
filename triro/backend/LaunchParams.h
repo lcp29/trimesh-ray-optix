@@ -6,14 +6,21 @@
 namespace hmesh {
 
 constexpr int MAX_ANYHIT_SIZE = 8;
+constexpr int MAX_SIZE_LENGTH = 4;
 
 struct RayInput {
     // ray count
     size_t nray;
+    // ray shape
+    long rayShape[MAX_SIZE_LENGTH];
     // ray origins
-    float3 *origins;
+    float *origins;
+    // ray origins stride
+    long originsStride[MAX_SIZE_LENGTH];
     // ray directions
-    float3 *directions;
+    float *directions;
+    // ray directions stride
+    long directionsStride[MAX_SIZE_LENGTH];
     // hit counts
     int *hitCounts;
     // global index

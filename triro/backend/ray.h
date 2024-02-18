@@ -4,6 +4,7 @@
 #include "base.h"
 #include "optix_types.h"
 #include <torch/extension.h>
+#include <limits>
 
 namespace hmesh {
 

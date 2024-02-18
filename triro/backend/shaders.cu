@@ -24,6 +24,44 @@ __forceinline__ __host__ __device__ T *getPayloadPointer() {
     return (T *)p;
 }
 
+__forceinline__ __device__ void getIndices(long indices[MAX_SIZE_LENGTH], long shape[MAX_SIZE_LENGTH], int idx) {
+    #pragma unroll
+    for (int i = MAX_SIZE_LENGTH - 1; i >= 0; i--) {
+        indices[i] = idx % shape[i];
+        idx /= shape[i];
+    }
+}
+
+__forceinline__ __device__ std::tuple<float3, float3> getRay(int idx) {
+    // corresponding float idx in [0, 3N)
+    int float_idx = idx * 3;
+    // thread index in all dims
+    long indices[MAX_SIZE_LENGTH];
+    getIndices(indices, launchParams.rays.rayShape, float_idx);
+    // index in the flat array
+    long ori_real_idx = 0;
+    long dir_real_idx = 0;
+    #pragma unroll
+    for (int i = 0; i < MAX_SIZE_LENGTH; i++) {
+        ori_real_idx += indices[i] * launchParams.rays.originsStride[i];
+        dir_real_idx += indices[i] * launchParams.rays.directionsStride[i];
+    }
+    // ray info
+    float3 ray_origin;
+    long last_stride = launchParams.rays.originsStride[MAX_SIZE_LENGTH - 1];
+    ray_origin.x = launchParams.rays.origins[ori_real_idx];
+    ray_origin.y = launchParams.rays.origins[ori_real_idx + last_stride];
+    ray_origin.z = launchParams.rays.origins[ori_real_idx + 2 * last_stride];
+    float3 ray_dir;
+    last_stride = launchParams.rays.directionsStride[MAX_SIZE_LENGTH - 1];
+    ray_dir.x = launchParams.rays.directions[dir_real_idx];
+    ray_dir.y = launchParams.rays.directions[dir_real_idx + last_stride];
+    ray_dir.z = launchParams.rays.directions[dir_real_idx + 2 * last_stride];
+    // printf("idx: %d, ray_origin: (%f, %f, %f), ray_dir: (%f, %f, %f), ori_real_idx: %ld, dir_real_idx: %ld, indices: (%ld, %ld, %ld, %ld)\n", 
+    //    idx, ray_origin.x, ray_origin.y, ray_origin.z, ray_dir.x, ray_dir.y, ray_dir.z, ori_real_idx, dir_real_idx, indices[0], indices[1], indices[2], indices[3]);
+    return {ray_origin, ray_dir};
+}
+
 // intersects_any
 
 extern "C" __global__ void __miss__intersectsAny() {
@@ -42,8 +80,7 @@ extern "C" __global__ void __raygen__intersectsAny() {
     // intersection result, to be overwritten by the shader
     bool isect_result = false;
     // ray info
-    float3 ray_origin = launchParams.rays.origins[idx];
-    float3 ray_dir = launchParams.rays.directions[idx];
+    auto [ray_origin, ray_dir] = getRay(idx);
     // result pointer
     auto [u0, u1] = setPayloadPointer(&isect_result);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
@@ -69,8 +106,7 @@ extern "C" __global__ void __raygen__intersectsFirst() {
     // first hit triangle index, to be overwritten by the shader
     int ch_idx = -1;
     // ray info
-    float3 ray_origin = launchParams.rays.origins[idx];
-    float3 ray_dir = launchParams.rays.directions[idx];
+    auto [ray_origin, ray_dir] = getRay(idx);
     // result pointer
     auto [u0, u1] = setPayloadPointer(&ch_idx);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
@@ -121,8 +157,7 @@ extern "C" __global__ void __raygen__intersectsClosest() {
     int idx = optixGetLaunchIndex().x;
     WBData wbdata;
     // ray info
-    float3 ray_origin = launchParams.rays.origins[idx];
-    float3 ray_dir = launchParams.rays.directions[idx];
+    auto [ray_origin, ray_dir] = getRay(idx);
     // result pointer
     auto [u0, u1] = setPayloadPointer(&wbdata);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
@@ -150,8 +185,7 @@ extern "C" __global__ void __raygen__intersectsCount() {
     int idx = optixGetLaunchIndex().x;
     int hitCount = 0;
     // ray info
-    float3 ray_origin = launchParams.rays.origins[idx];
-    float3 ray_dir = launchParams.rays.directions[idx];
+    auto [ray_origin, ray_dir] = getRay(idx);
     // result pointer
     auto [u0, u1] = setPayloadPointer(&hitCount);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
@@ -198,8 +232,7 @@ extern "C" __global__ void __raygen__intersectsLocation() {
     payload.hitCount = 0;
     payload.globalIdx = globalIdx;
     // ray info
-    float3 ray_origin = launchParams.rays.origins[idx];
-    float3 ray_dir = launchParams.rays.directions[idx];
+    auto [ray_origin, ray_dir] = getRay(idx);
     // result pointer
     auto [u0, u1] = setPayloadPointer(&payload);
     optixTrace(launchParams.traversable, ray_origin, ray_dir, 0., 1e7, 0,
