@@ -7,11 +7,11 @@ from triro.ray.ray_optix import RayMeshIntersector
 
 
 def gen_rays(cam_mat, w, h, f):
-    x, y = torch.meshgrid(
+    y, x = torch.meshgrid(
         [torch.linspace(0, h - 1, h), torch.linspace(0, w - 1, w)], indexing="ij"
     )
-    x = x - (h - 1) / 2
-    y = y - (w - 1) / 2
+    x = x - (w - 1) / 2
+    y = y - (h - 1) / 2
     z = -torch.ones_like(x) * f
     dirs = torch.stack([x, y, z], dim=-1).cuda()
     dirs /= torch.norm(dirs, dim=-1, keepdim=True)
@@ -20,9 +20,9 @@ def gen_rays(cam_mat, w, h, f):
 
 cam_mat = torch.Tensor(
     [
-        [2.7091104e-01, 5.6272650e-01, 7.8099048e-01],
-        [-1.4769979e-01, 8.2602328e-01, -5.4393965e-01],
-        [-9.5120555e-01, 3.2007132e-02, 3.0689341e-01],
+        [5.6272650e-01, 2.7091104e-01, 7.8099048e-01],
+        [8.2602328e-01, -1.4769979e-01, -5.4393965e-01],
+        [3.2007132e-02, -9.5120555e-01, 3.0689341e-01],
     ]
 ).cuda()
 rw = 640
