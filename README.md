@@ -1,4 +1,4 @@
-# Triro - An in-place replacement for trimesh.ray in OptiX
+# Triro - A Python Ray-Mesh Intersector in OptiX
 
 Triro is a mesh ray tracing library implemented with NVIDIA OptiX. It has compatible interface with [trimesh.ray](https://trimesh.org/trimesh.ray.html) and provides other convenient functions.
 
