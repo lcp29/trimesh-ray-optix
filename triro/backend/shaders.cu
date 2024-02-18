@@ -24,7 +24,7 @@ __forceinline__ __host__ __device__ T *getPayloadPointer() {
     return (T *)p;
 }
 
-__forceinline__ __device__ void getIndices(long indices[MAX_SIZE_LENGTH], long shape[MAX_SIZE_LENGTH], int idx) {
+__forceinline__ __device__ void getIndices(int64_t indices[MAX_SIZE_LENGTH], int64_t shape[MAX_SIZE_LENGTH], int idx) {
     #pragma unroll
     for (int i = MAX_SIZE_LENGTH - 1; i >= 0; i--) {
         indices[i] = idx % shape[i];
@@ -36,11 +36,11 @@ __forceinline__ __device__ std::tuple<float3, float3> getRay(int idx) {
     // corresponding float idx in [0, 3N)
     int float_idx = idx * 3;
     // thread index in all dims
-    long indices[MAX_SIZE_LENGTH];
+    int64_t indices[MAX_SIZE_LENGTH];
     getIndices(indices, launchParams.rays.rayShape, float_idx);
     // index in the flat array
-    long ori_real_idx = 0;
-    long dir_real_idx = 0;
+    int64_t ori_real_idx = 0;
+    int64_t dir_real_idx = 0;
     #pragma unroll
     for (int i = 0; i < MAX_SIZE_LENGTH; i++) {
         ori_real_idx += indices[i] * launchParams.rays.originsStride[i];
@@ -48,7 +48,7 @@ __forceinline__ __device__ std::tuple<float3, float3> getRay(int idx) {
     }
     // ray info
     float3 ray_origin;
-    long last_stride = launchParams.rays.originsStride[MAX_SIZE_LENGTH - 1];
+    int64_t last_stride = launchParams.rays.originsStride[MAX_SIZE_LENGTH - 1];
     ray_origin.x = launchParams.rays.origins[ori_real_idx];
     ray_origin.y = launchParams.rays.origins[ori_real_idx + last_stride];
     ray_origin.z = launchParams.rays.origins[ori_real_idx + 2 * last_stride];

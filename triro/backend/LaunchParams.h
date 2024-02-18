@@ -12,15 +12,15 @@ struct RayInput {
     // ray count
     size_t nray;
     // ray shape
-    long rayShape[MAX_SIZE_LENGTH];
+    int64_t rayShape[MAX_SIZE_LENGTH];
     // ray origins
     float *origins;
     // ray origins stride
-    long originsStride[MAX_SIZE_LENGTH];
+    int64_t originsStride[MAX_SIZE_LENGTH];
     // ray directions
     float *directions;
     // ray directions stride
-    long directionsStride[MAX_SIZE_LENGTH];
+    int64_t directionsStride[MAX_SIZE_LENGTH];
     // hit counts
     int *hitCounts;
     // global index
