@@ -4,3 +4,4 @@ __pycache__
 triro/backend/embedded/shaders.optixir
 triro/backend/embedded/shaders_embedded.h
 build/
+test/models/iscv2.obj

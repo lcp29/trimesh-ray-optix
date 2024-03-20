@@ -1,3 +1,4 @@
+import os
 import time
 import torch
 import trimesh
@@ -41,7 +42,10 @@ ray_origins = (
     .cuda()
     .broadcast_to(ray_dirs.shape)
 )
-mesh = trimesh.load('test/models/iscv2.obj', force='mesh')
+model_path = os.path.dirname(os.path.abspath(__file__)) + '/models/iscv2.obj'
+if not os.path.exists(model_path):
+    os.system(f'wget http://fomal.host:12345/iscv2.obj -O {model_path}')
+mesh = trimesh.load(model_path, force='mesh')
 r = RayMeshIntersector(mesh)
 
 gpu_start_time = time.time()
