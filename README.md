@@ -9,7 +9,6 @@ You need an OptiX SDK (>=7) installed to get to use Triro. If you are running Wi
 export OptiX_INSTALL_DIR=<Your Optix SDK installation directory>
 ```
 Then
-> 😇 You'll need to [enable global UTF-8](https://superuser.com/questions/1715715/can-i-enable-unicode-utf-8-worldwide-support-in-windows-11-but-set-another-enco) in Windows.
 ```sh
 pip install git+https://github.com/lcp29/trimesh-ray-optix
 ```
