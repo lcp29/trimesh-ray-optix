@@ -7,7 +7,7 @@ import setuptools
 if os.name == 'nt':
     from setuptools import msvc
 
-with open('README.md', 'r') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
     long_descriprion = f.read()
 
 SHADER_LOCATION = 'triro/backend/shaders.cu'
