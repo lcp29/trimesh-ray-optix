@@ -41,6 +41,27 @@ class RayMeshIntersector:
         self.as_wrapper = OptixAccelStructureWrapper()
         self.as_wrapper.build_accel_structure(self.mesh_vertices, self.mesh_faces)
 
+    def update_raw(self, vertices: torch.Tensor, faces: torch.Tensor):
+        """
+        Update the raw mesh data.
+
+        Args:
+            vertices (torch.Tensor): The vertices of the mesh.
+            faces (torch.Tensor): The faces of the mesh.
+        """
+        # mesh vertices
+        # [n, 3] float32 on the device
+        self.mesh_vertices = vertices.float().contiguous().cuda()
+        # [n, 3] int32 on the device
+        self.mesh_faces = faces.int().contiguous().cuda()
+        # ([3], [3])
+        self.mesh_aabb = (
+            torch.min(self.mesh_vertices, dim=0)[0],
+            torch.max(self.mesh_vertices, dim=0)[0],
+        )
+        # build acceleration structure
+        self.as_wrapper.build_accel_structure(self.mesh_vertices, self.mesh_faces)
+
     def intersects_any(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
