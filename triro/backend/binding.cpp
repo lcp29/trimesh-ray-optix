@@ -33,7 +33,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         m, "OptixAccelStructureWrapperCPP")
         .def(pybind11::init<>())
         .def("buildAccelStructure",
-             &hmesh::OptixAccelStructureWrapperCPP::buildAccelStructure);
+             &hmesh::OptixAccelStructureWrapperCPP::buildAccelStructure)
+        .def("freeAccelStructure",
+             &hmesh::OptixAccelStructureWrapperCPP::freeAccelStructure);
 
     m.def("initOptix", &hmesh::initOptix, "Initialize Optix");
     m.def("createOptixContext", &hmesh::createOptixContext,

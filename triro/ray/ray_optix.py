@@ -300,6 +300,9 @@ class OptixAccelStructureWrapper:
     def __init__(self):
         self._inner = hops.get_module().OptixAccelStructureWrapperCPP()
 
+    def __del__(self):
+        self._inner.freeAccelStructure()
+
     def build_accel_structure(
         self,
         vertices: Float32[torch.Tensor, "nvert 3"],
