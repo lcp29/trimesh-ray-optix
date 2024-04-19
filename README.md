@@ -3,6 +3,8 @@
 Triro is a mesh ray tracing library implemented with NVIDIA OptiX. It has compatible interface with [trimesh.ray](https://trimesh.org/trimesh.ray.html) and provides other convenient functions.
 
 ## 🔧️ Installation
+> You may need to enable <a href="https://superuser.com/questions/1715715/can-i-enable-unicode-utf-8-worldwide-support-in-windows-11-but-set-another-enco">unicode UTF-8 global support</a> in Windows for some character set problems.
+
 You need an OptiX SDK (>=7) installed to get to use Triro. If you are running Windows you also need an MSVC installation. First
 ```sh
 # if you are running in Windows set the system variable
