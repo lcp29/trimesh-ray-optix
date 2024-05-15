@@ -18,20 +18,33 @@ class RayMeshIntersector:
         mesh (trimesh.Trimesh): The mesh to be used for intersection tests.
     """
 
-    def __init__(self, mesh: trimesh.Trimesh):
+    def __init__(self, **kwargs):
         """
         Initialize the RayMeshIntersector class.
 
         Args:
             mesh (trimesh.Trimesh): The mesh to be used for intersection tests.
+            or
+            vertices (torch.Tensor): The vertices of the mesh.
+            faces (torch.Tensor): The faces of the mesh.
         """
-        # original mesh on the host memory
-        self.mesh_raw = mesh
-        # mesh vertices
-        # [n, 3] float32 on the device
-        self.mesh_vertices = torch.from_numpy(mesh.vertices).float().contiguous().cuda()
-        # [n, 3] int32 on the device
-        self.mesh_faces = torch.from_numpy(mesh.faces).int().contiguous().cuda()
+        if 'mesh' in kwargs:
+            mesh = kwargs['mesh']
+            # mesh vertices
+            # [n, 3] float32 on the device
+            self.mesh_vertices = torch.from_numpy(mesh.vertices).float().contiguous().cuda()
+            # [n, 3] int32 on the device
+            self.mesh_faces = torch.from_numpy(mesh.faces).int().contiguous().cuda()
+        elif 'vertices' in kwargs and 'faces' in kwargs:
+            vertices = kwargs['vertices']
+            faces = kwargs['faces']
+            # mesh vertices
+            # [n, 3] float32 on the device
+            self.mesh_vertices = vertices.float().contiguous().cuda()
+            # [n, 3] int32 on the device
+            self.mesh_faces = faces.int().contiguous().cuda()
+        else:
+            raise ValueError("Either 'mesh' or 'vertices' and 'faces' must be provided.")
         # ([3], [3])
         self.mesh_aabb = (
             torch.min(self.mesh_vertices, dim=0)[0],
