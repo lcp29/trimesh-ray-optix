@@ -8,12 +8,12 @@ i = torch.Tensor([[0, 1, 2]]).int()
 m = trimesh.Trimesh(vertices=f, faces=i)
 o = torch.Tensor([[0, 0, 4], [10, 10, 10]]).cuda()
 d = torch.Tensor([[0, 0, -1], [0, 1, 0]]).cuda()
-r = RayMeshIntersector(m)
+r = RayMeshIntersector(mesh=m)
 print(r.intersects_any(o, d))
 print(r.intersects_first(o, d))
 
 s = trimesh.creation.icosphere()
-sr = RayMeshIntersector(s)
+sr = RayMeshIntersector(mesh=s)
 x, y = torch.meshgrid(
     [torch.linspace(-1, 1, 800), torch.linspace(-1, 1, 800)], indexing="ij"
 )
