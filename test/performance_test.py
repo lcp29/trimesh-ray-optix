@@ -44,7 +44,7 @@ ray_origins = (
 )
 model_path = os.path.dirname(os.path.abspath(__file__)) + '/models/iscv2.obj'
 if not os.path.exists(model_path):
-    os.system(f'wget http://file.fomal.host/iscv2.obj -O {model_path}')
+    os.system(f'wget https://file.fomal.host/iscv2.obj -O {model_path}')
 mesh = trimesh.load(model_path, force='mesh')
 r = RayMeshIntersector(mesh)
 
