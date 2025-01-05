@@ -1,0 +1,5 @@
+<map id="triro.ray.ray_optix.RayMeshIntersector" name="triro.ray.ray_optix.RayMeshIntersector">
+<area shape="rect" id="Node000001" title="A class for performing ray&#45;mesh intersection tests using OptiX acceleration structure." alt="" coords="5,94,180,135"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="66,5,119,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="95,46,95,93,90,93,90,46"/>
+</map>

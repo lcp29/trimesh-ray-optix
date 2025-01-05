@@ -1,0 +1,20 @@
+<map id="triro/backend/optix8.h" name="triro/backend/optix8.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="81,5,225,31"/>
+<area shape="rect" id="Node000002" href="$CUDABuffer_8h.html" title=" " alt="" coords="127,79,308,105"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,40,208,77,205,80,172,44"/>
+<area shape="rect" id="Node000003" href="$base_8cpp.html" title=" " alt="" coords="28,153,180,178"/>
+<area shape="poly" id="edge7_Node000001_Node000003" title=" " alt="" coords="136,45,117,80,108,119,106,152,101,152,103,118,112,78,132,42"/>
+<area shape="rect" id="Node000004" href="$ray_8cpp.html" title="evrything per&#45;instance" alt="" coords="147,226,288,252"/>
+<area shape="poly" id="edge11_Node000001_Node000004" title=" " alt="" coords="116,41,73,67,33,101,18,120,10,139,9,158,18,177,44,202,76,218,112,229,147,234,146,240,110,234,74,223,41,206,14,180,4,159,5,138,14,117,29,98,70,63,114,36"/>
+<area shape="rect" id="Node000007" href="$base_8h.html" title=" " alt="" coords="332,79,470,105"/>
+<area shape="poly" id="edge8_Node000001_Node000007" title=" " alt="" coords="211,33,360,76,358,81,209,38"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="187,116,125,154,122,150,184,111"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="220,120,220,226,215,226,215,120"/>
+<area shape="rect" id="Node000005" href="$ray_8h.html" title=" " alt="" coords="255,153,382,178"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="249,112,303,150,300,154,245,116"/>
+<area shape="poly" id="edge6_Node000005_Node000004" title=" " alt="" coords="290,190,236,228,233,224,287,185"/>
+<area shape="rect" id="Node000006" href="$binding_8cpp.html" title=" " alt="" coords="312,226,477,252"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="344,187,384,224,380,228,341,191"/>
+<area shape="poly" id="edge9_Node000007_Node000004" title=" " alt="" coords="409,120,409,150,405,166,397,180,377,195,347,208,275,228,274,223,345,203,375,190,393,177,400,164,403,150,404,120"/>
+<area shape="poly" id="edge10_Node000007_Node000005" title=" " alt="" coords="377,117,334,154,331,150,374,113"/>
+</map>

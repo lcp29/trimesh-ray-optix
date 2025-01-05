@@ -1,0 +1,18 @@
+<map id="triro/backend/type.h" name="triro/backend/type.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,140,31"/>
+<area shape="rect" id="Node000002" href="$ray_8cpp.html" title="evrything per&#45;instance" alt="" coords="50,300,191,326"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="72,47,69,139,74,196,87,251,99,277,113,298,109,301,94,279,82,253,69,197,64,139,67,46"/>
+<area shape="rect" id="Node000003" href="$sbtdef_8h.html" title=" " alt="" coords="82,79,228,105"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="100,39,143,77,140,81,96,44"/>
+<area shape="poly" id="edge9_Node000003_Node000002" title=" " alt="" coords="126,116,109,133,96,154,91,173,89,193,93,235,105,271,117,298,112,300,100,273,88,236,83,194,85,172,91,152,105,130,122,113"/>
+<area shape="rect" id="Node000004" href="$base_8cpp.html" title=" " alt="" coords="106,153,258,178"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="167,118,180,151,175,153,162,120"/>
+<area shape="rect" id="Node000005" href="$base_8h.html" title=" " alt="" coords="282,153,420,178"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="204,108,319,150,317,155,202,113"/>
+<area shape="poly" id="edge5_Node000005_Node000002" title=" " alt="" coords="318,189,250,229,139,302,136,297,247,224,315,184"/>
+<area shape="rect" id="Node000006" href="$ray_8h.html" title=" " alt="" coords="261,226,388,252"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="344,194,331,227,327,225,339,192"/>
+<area shape="poly" id="edge8_Node000006_Node000002" title=" " alt="" coords="277,260,156,302,154,297,275,255"/>
+<area shape="rect" id="Node000007" href="$binding_8cpp.html" title=" " alt="" coords="242,300,407,326"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="327,267,327,300,322,300,322,267"/>
+</map>
