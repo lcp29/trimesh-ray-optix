@@ -73,4 +73,4 @@ speedup: 2173x
 
 The Trimesh document is [here](https://trimesh.org/trimesh.ray.html).
 
-For detailed document see the [wiki](https://lcp29.github.com/trimesh-ray-optix).
+For detailed document see the [wiki](https://lcp29.github.com/trimesh-ray-optix). All related functions are in the class `RayMeshIntersector`.
