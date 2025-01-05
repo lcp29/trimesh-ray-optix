@@ -46,7 +46,7 @@ model_path = os.path.dirname(os.path.abspath(__file__)) + '/models/iscv2.obj'
 if not os.path.exists(model_path):
     os.system(f'wget https://file.fomal.host/iscv2.obj -O {model_path}')
 mesh = trimesh.load(model_path, force='mesh')
-r = RayMeshIntersector(mesh)
+r = RayMeshIntersector(mesh=mesh)
 
 gpu_start_time = time.time()
 for i in range(GPU_ITER):
@@ -69,7 +69,7 @@ ray_dirs = ray_dirs.cpu().reshape(-1, 3)
 ray_origins = ray_origins.cpu().reshape(-1, 3)
 cpu_start_time = time.time()
 for i in range(CPU_ITER):
-    result = mesh.ray.intersects_location(ray_origins, ray_dirs, False)
+    result = mesh.ray.intersects_location(ray_origins, ray_dirs, multiple_hits=False)
 cpu_end_time = time.time()
 cpu_time = cpu_end_time - cpu_start_time
 print(f'Trimesh & PyEmbree CPU time: {cpu_time:.3f} s / {CPU_ITER} iters')

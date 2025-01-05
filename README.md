@@ -29,7 +29,7 @@ from triro.ray.ray_optix import RayMeshIntersector
 
 # creating mesh and intersector
 mesh = trimesh.creation.icosphere()
-intersector = RayMeshIntersector(mesh)
+intersector = RayMeshIntersector(mesh=mesh)
 
 # generating rays
 y, x = torch.meshgrid([torch.linspace(1, -1, 800), 
