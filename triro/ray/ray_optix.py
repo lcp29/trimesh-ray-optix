@@ -5,27 +5,23 @@ from jaxtyping import Float32, Int32, Bool
 import triro.backend.ops as hops
 
 
+## @class RayMeshIntersector
+# @brief A class for performing ray-mesh intersection tests using OptiX acceleration structure.
+#
+# This class provides methods for checking if rays intersect with a mesh, finding the closest intersection,
+# retrieving intersection locations, counting intersections, and more.
+#
+# This class has similar functionality as the `RayMeshIntersector` class in `trimesh.ray`.
+#
+# @param kwargs: Keyword arguments for initializing the intersector.
+#                Either 'mesh' or 'vertices' and 'faces' must be provided.
 class RayMeshIntersector:
-    """
-    @class RayMeshIntersector
-    @brief A class for performing ray-mesh intersection tests using OptiX acceleration structure.
-
-    This class provides methods for checking if rays intersect with a mesh, finding the closest intersection,
-    retrieving intersection locations, counting intersections, and more.
-
-    This class has similar functionality as the `RayMeshIntersector` class in `trimesh.ray`.
-
-    @param kwargs: Keyword arguments for initializing the intersector.
-                   Either 'mesh' or 'vertices' and 'faces' must be provided.
-    """
-
+    
+    ## @brief Initialize the RayMeshIntersector class.
+    #
+    # @param kwargs: Keyword arguments for initializing the intersector.
+    #                Either 'mesh' or 'vertices' and 'faces' must be provided.
     def __init__(self, **kwargs):
-        """
-        @brief Initialize the RayMeshIntersector class.
-
-        @param kwargs: Keyword arguments for initializing the intersector.
-                       Either 'mesh' or 'vertices' and 'faces' must be provided.
-        """
         if 'mesh' in kwargs:
             mesh = kwargs['mesh']
             # mesh vertices
@@ -52,15 +48,13 @@ class RayMeshIntersector:
         self.as_wrapper = OptixAccelStructureWrapper()
         self.as_wrapper.build_accel_structure(self.mesh_vertices, self.mesh_faces)
 
+    ## @brief Update the raw mesh data.
+    #
+    # @param vertices (Float32[torch.Tensor, "n 3"]): The vertices of the mesh.
+    # @param faces (Int32[torch.Tensor, "f 3"]): The faces of the mesh.
     def update_raw(self, 
                    vertices: Float32[torch.Tensor, "n 3"], 
                    faces: Int32[torch.Tensor, "f 3"]):
-        """
-        @brief Update the raw mesh data.
-
-        @param vertices (Float32[torch.Tensor, "n 3"]): The vertices of the mesh.
-        @param faces (Int32[torch.Tensor, "f 3"]): The faces of the mesh.
-        """
         # mesh vertices
         # [n, 3] float32 on the device
         self.mesh_vertices = vertices.float().contiguous().cuda()
@@ -74,36 +68,52 @@ class RayMeshIntersector:
         # build acceleration structure
         self.as_wrapper.build_accel_structure(self.mesh_vertices, self.mesh_faces)
 
+    ## @brief Check if any intersections occur for each ray.
+    #
+    # @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
+    # @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
+    #
+    # @return Bool[torch.Tensor, "*b"]: A boolean tensor indicating if each ray intersects with the mesh.
     def intersects_any(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
         directions: Float32[torch.Tensor, "*b 3"],
     ) -> Bool[torch.Tensor, "*b"]:
-        """
-        @brief Check if any intersections occur for each ray.
-
-        @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
-        @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
-
-        @return Bool[torch.Tensor, "*b"]: A boolean tensor indicating if each ray intersects with the mesh.
-        """
         return hops.intersects_any(self.as_wrapper, origins, directions)
 
+    ## @brief Find the index of the first intersection for each ray.
+    #
+    # @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
+    # @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
+    #
+    # @return Int32[torch.Tensor, "*b"]: The index of the first intersection for each ray.
     def intersects_first(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
         directions: Float32[torch.Tensor, "*b 3"],
     ) -> Int32[torch.Tensor, "*b"]:
-        """
-        @brief Find the index of the first intersection for each ray.
-
-        @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
-        @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
-
-        @return Int32[torch.Tensor, "*b"]: The index of the first intersection for each ray.
-        """
         return hops.intersects_first(self.as_wrapper, origins, directions)
 
+    ## @brief Find the closest intersection for each ray.
+    #
+    # @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
+    # @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
+    # @param stream_compaction (bool, optional): Whether to perform stream compaction. Defaults to False.
+    #
+    # @return Tuple: A tuple containing the following elements:
+    #                - If `stream_compaction` is False:
+    #                  - hit (Bool[torch.Tensor, "*b"]): A boolean tensor indicating if each ray intersects with the mesh.
+    #                  - front (Bool[torch.Tensor, "*b"]): A boolean tensor indicating if the intersection is from the front face of the mesh.
+    #                  - triangle index (Int32[torch.Tensor, "*b"]): The index of the triangle that was intersected by each ray.
+    #                  - intersect location (Float32[torch.Tensor, "*b 3"]): The 3D coordinates of the closest intersection point.
+    #                  - uv (Float32[torch.Tensor, "*b 2"]): The UV coordinates of the closest intersection point.
+    #                - If `stream_compaction` is True:
+    #                  - hit (Bool[torch.Tensor, "*b"]): A boolean tensor indicating if each ray intersects with the mesh.
+    #                  - front (Bool[torch.Tensor, "h"]): A boolean tensor indicating if the intersection is from the front face of the mesh.
+    #                  - ray index (Int32[torch.Tensor, "h"]): The index of the ray that had the closest intersection.
+    #                  - triangle index (Int32[torch.Tensor, "h"]): The index of the triangle that was intersected by the closest ray.
+    #                  - intersect location (Float32[torch.Tensor, "h 3"]): The 3D coordinates of the closest intersection point.
+    #                  - uv (Float32[torch.Tensor, "h 2"]): The UV coordinates of the closest intersection point.
     def intersects_closest(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
@@ -126,28 +136,6 @@ class RayMeshIntersector:
             Float32[torch.Tensor, "h 2"],  # uv:
         ]
     ):
-        """
-        @brief Find the closest intersection for each ray.
-
-        @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
-        @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
-        @param stream_compaction (bool, optional): Whether to perform stream compaction. Defaults to False.
-
-        @return Tuple: A tuple containing the following elements:
-                       - If `stream_compaction` is False:
-                         - hit (Bool[torch.Tensor, "*b"]): A boolean tensor indicating if each ray intersects with the mesh.
-                         - front (Bool[torch.Tensor, "*b"]): A boolean tensor indicating if the intersection is from the front face of the mesh.
-                         - triangle index (Int32[torch.Tensor, "*b"]): The index of the triangle that was intersected by each ray.
-                         - intersect location (Float32[torch.Tensor, "*b 3"]): The 3D coordinates of the closest intersection point.
-                         - uv (Float32[torch.Tensor, "*b 2"]): The UV coordinates of the closest intersection point.
-                       - If `stream_compaction` is True:
-                         - hit (Bool[torch.Tensor, "*b"]): A boolean tensor indicating if each ray intersects with the mesh.
-                         - front (Bool[torch.Tensor, "h"]): A boolean tensor indicating if the intersection is from the front face of the mesh.
-                         - ray index (Int32[torch.Tensor, "h"]): The index of the ray that had the closest intersection.
-                         - triangle index (Int32[torch.Tensor, "h"]): The index of the triangle that was intersected by the closest ray.
-                         - intersect location (Float32[torch.Tensor, "h 3"]): The 3D coordinates of the closest intersection point.
-                         - uv (Float32[torch.Tensor, "h 2"]): The UV coordinates of the closest intersection point.
-        """
         hit, front, tri_idx, loc, uv = hops.intersects_closest(
             self.as_wrapper, origins, directions
         )
@@ -157,6 +145,15 @@ class RayMeshIntersector:
         else:
             return hit, front, tri_idx, loc, uv
 
+    ## @brief Find the intersection location for each ray.
+    #
+    # @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
+    # @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
+    #
+    # @return Tuple: A tuple containing the following elements:
+    #                - intersection locations (Float32[torch.Tensor, "h 3"]): The 3D coordinates of the intersection points for each ray.
+    #                - hit ray indices (Int32[torch.Tensor, "h"]): The indices of the rays that had intersections.
+    #                - triangle indices (Int32[torch.Tensor, "h"]): The indices of the triangles that were intersected by the rays.
     def intersects_location(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
@@ -164,34 +161,33 @@ class RayMeshIntersector:
     ) -> Tuple[
         Float32[torch.Tensor, "h 3"], Int32[torch.Tensor, "h"], Int32[torch.Tensor, "h"]
     ]:
-        """
-        @brief Find the intersection location for each ray.
-
-        @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
-        @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
-
-        @return Tuple: A tuple containing the following elements:
-                       - intersection locations (Float32[torch.Tensor, "h 3"]): The 3D coordinates of the intersection points for each ray.
-                       - hit ray indices (Int32[torch.Tensor, "h"]): The indices of the rays that had intersections.
-                       - triangle indices (Int32[torch.Tensor, "h"]): The indices of the triangles that were intersected by the rays.
-        """
         return hops.intersects_location(self.as_wrapper, origins, directions)
 
+    ## @brief Count the number of intersections for each ray.
+    #
+    # @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
+    # @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
+    #
+    # @return Int32[torch.Tensor, "*b 3"]: The number of intersections for each ray.
     def intersects_count(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
         directions: Float32[torch.Tensor, "*b 3"],
     ) -> Int32[torch.Tensor, "*b 3"]:
-        """
-        @brief Count the number of intersections for each ray.
-
-        @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
-        @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
-
-        @return Int32[torch.Tensor, "*b 3"]: The number of intersections for each ray.
-        """
         return hops.intersects_count(self.as_wrapper, origins, directions)
 
+    ## @brief Find the intersection indices for each ray.
+    #
+    # @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
+    # @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
+    # @param return_locations (bool, optional): Whether to return the intersection locations. Defaults to False.
+    # @param multiple_hits (bool, optional): Whether to allow multiple intersections per ray. Defaults to True.
+    #
+    # @return Tuple: A tuple containing the following elements:
+    #                - hit triangle indices (Int32[torch.Tensor, "h"]): The indices of the triangles that were hit by the rays.
+    #                - ray indices (Int32[torch.Tensor, "h"]): The indices of the rays that had intersections.
+    #                - hit location (Float32[torch.Tensor, "h 3"]): The 3D coordinates of the intersection points for each ray.
+    #                  (Only returned if `return_locations` is set to True)
     def intersects_id(
         self,
         origins: Float32[torch.Tensor, "*b 3"],
@@ -208,20 +204,6 @@ class RayMeshIntersector:
             Int32[torch.Tensor, "h"], Int32[torch.Tensor, "h"]
         ]  # hit triangle indices and ray indices
     ):
-        """
-        @brief Find the intersection indices for each ray.
-
-        @param origins (Float32[torch.Tensor, "*b 3"]): The origins of the rays.
-        @param directions (Float32[torch.Tensor, "*b 3"]): The directions of the rays.
-        @param return_locations (bool, optional): Whether to return the intersection locations. Defaults to False.
-        @param multiple_hits (bool, optional): Whether to allow multiple intersections per ray. Defaults to True.
-
-        @return Tuple: A tuple containing the following elements:
-                       - hit triangle indices (Int32[torch.Tensor, "h"]): The indices of the triangles that were hit by the rays.
-                       - ray indices (Int32[torch.Tensor, "h"]): The indices of the rays that had intersections.
-                       - hit location (Float32[torch.Tensor, "h 3"]): The 3D coordinates of the intersection points for each ray.
-                         (Only returned if `return_locations` is set to True)
-        """
         if multiple_hits:
             loc, ray_idx, tri_idx = hops.intersects_location(
                 self.as_wrapper, origins, directions
@@ -240,19 +222,17 @@ class RayMeshIntersector:
             else:
                 return tri_idx[hit], ray_idx
 
+    ## @brief Check if the points are contained within the mesh.
+    #
+    # @param points (Float32[torch.Tensor, "*b 3"]): The points to check.
+    # @param check_direction (Optional[Float32[torch.Tensor, "3"]], optional): The direction to check. Defaults to None.
+    #
+    # @return Bool[torch.Tensor, "*b 3"]: A boolean tensor indicating if each point is contained within the mesh.
     def contains_points(
         self,
         points: Float32[torch.Tensor, "*b 3"],
         check_direction: Optional[Float32[torch.Tensor, "3"]] = None,
     ) -> Bool[torch.Tensor, "*b 3"]:
-        """
-        @brief Check if the points are contained within the mesh.
-
-        @param points (Float32[torch.Tensor, "*b 3"]): The points to check.
-        @param check_direction (Optional[Float32[torch.Tensor, "3"]], optional): The direction to check. Defaults to None.
-
-        @return Bool[torch.Tensor, "*b 3"]: A boolean tensor indicating if each point is contained within the mesh.
-        """
         contains = torch.zeros(points.shape[:-1], dtype=torch.bool)
         # check if points are in the aabb
         inside_aabb = ~(
