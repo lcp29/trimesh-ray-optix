@@ -43,6 +43,9 @@ ray_origins = (
     .broadcast_to(ray_dirs.shape)
 )
 model_path = os.path.dirname(os.path.abspath(__file__)) + '/models/iscv2.obj'
+model_dir = os.path.dirname(os.path.abspath(__file__)) + '/models'
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
 if not os.path.exists(model_path):
     os.system(f'wget https://file.fomal.host/iscv2.obj -O {model_path}')
 mesh = trimesh.load(model_path, force='mesh')
