@@ -12,11 +12,11 @@ export OptiX_INSTALL_DIR=<Your Optix SDK installation directory>
 ```
 Then
 ```sh
-pip install git+https://github.com/lcp29/trimesh-ray-optix
+pip install git+https://github.com/kangyiyang/trimesh-ray-optix
 ```
 or
 ```sh
-git clone https://github.com/lcp29/trimesh-ray-optix
+git clone https://github.com/kangyiyang/trimesh-ray-optix
 cd trimesh-ray-optix
 pip install .
 ```
