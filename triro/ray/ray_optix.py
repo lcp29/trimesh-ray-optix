@@ -233,12 +233,23 @@ class RayMeshIntersector:
         points: Float32[torch.Tensor, "*b 3"],
         check_direction: Optional[Float32[torch.Tensor, "3"]] = None,
     ) -> Bool[torch.Tensor, "*b 3"]:
-        contains = torch.zeros(points.shape[:-1], dtype=torch.bool)
+        """
+        Check if points are inside the mesh.
+
+        Args:
+            points (Float32[torch.Tensor, "*b 3"]): The points to be checked.
+            check_direction (Optional[Float32[torch.Tensor, "3"]], optional): The direction of the rays used for checking. Defaults to None.
+
+        Returns:
+            Bool[torch.Tensor, "*b 3"]: A boolean tensor indicating if each point is inside the mesh.
+        """
+        contains = torch.zeros(points.shape[:-1], dtype=torch.bool, device=points.device)
         # check if points are in the aabb
         inside_aabb = ~(
-            (~(points > self.mesh_aabb[0])).any()
-            | (~(points < self.mesh_aabb[1])).any()
+            (~(points > self.mesh_aabb[0])).any(dim=1)
+            | (~(points < self.mesh_aabb[1])).any(dim=1)
         )
+
         if not inside_aabb.any():
             return contains
         default_direction = torch.Tensor(
@@ -257,19 +268,23 @@ class RayMeshIntersector:
             ],
             dim=0,
         )
+        
         # if hit count in two directions are all odd number then the point is likely to be inside the mesh
         hit_count_mod_2 = torch.remainder(hit_count, 2)
-        agree = torch.equal(hit_count_mod_2[0], hit_count_mod_2[1])
-
+        agree = torch.all(hit_count_mod_2, dim=0)
         contain = inside_aabb & agree & hit_count_mod_2[0] == 1
 
-        broken_mask = ~agree & (hit_count == 0).any(dim=-1)
+        broken_mask = ~agree & (hit_count == 0).any(dim=0)
+    
         if not broken_mask.any():
             return contain
 
         if check_direction is None:
             new_direction = (torch.rand(3) - 0.5).cuda()
-            contains[broken_mask] = self.contains_points(self, points, new_direction)
+            contains = contain.cuda()
+            broken_mask = broken_mask.cuda()
+            points = points.cuda()
+            contains[broken_mask] = self.contains_points(points[broken_mask], new_direction)
 
         return contains
 
