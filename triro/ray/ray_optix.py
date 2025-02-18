@@ -233,16 +233,6 @@ class RayMeshIntersector:
         points: Float32[torch.Tensor, "*b 3"],
         check_direction: Optional[Float32[torch.Tensor, "3"]] = None,
     ) -> Bool[torch.Tensor, "*b 3"]:
-        """
-        Check if points are inside the mesh.
-
-        Args:
-            points (Float32[torch.Tensor, "*b 3"]): The points to be checked.
-            check_direction (Optional[Float32[torch.Tensor, "3"]], optional): The direction of the rays used for checking. Defaults to None.
-
-        Returns:
-            Bool[torch.Tensor, "*b 3"]: A boolean tensor indicating if each point is inside the mesh.
-        """
         contains = torch.zeros(points.shape[:-1], dtype=torch.bool, device=points.device)
         # check if points are in the aabb
         inside_aabb = ~(
