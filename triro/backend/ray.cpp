@@ -338,7 +338,8 @@ intersectsLocation(OptixAccelStructureWrapperCPP as, torch::Tensor origins,
         torch::TensorOptions().dtype(torch::kInt).device(torch::kCUDA);
     auto nhits = globalIdxBuf[-1].item<int>();
     globalIdxBuf = torch::cat({torch::zeros({1}, globalIdxBufOptions),
-                               torch::slice(hitCountBuf, 0, 0, -1)});
+                               torch::slice(globalIdxBuf, 0, 0, -1)});
+    globalIdxBuf = globalIdxBuf.toType(torch::kInt);
     // hit location
     auto locbufOptions =
         torch::TensorOptions().dtype(torch::kFloat).device(torch::kCUDA);
