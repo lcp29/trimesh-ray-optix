@@ -32,7 +32,9 @@ var NAVTREE =
         [ "All", "namespacemembers.html", null ],
         [ "Functions", "namespacemembers_func.html", null ],
         [ "Variables", "namespacemembers_vars.html", null ],
-        [ "Typedefs", "namespacemembers_type.html", null ]
+        [ "Typedefs", "namespacemembers_type.html", null ],
+        [ "Enumerations", "namespacemembers_enum.html", null ],
+        [ "Enumerator", "namespacemembers_eval.html", null ]
       ] ]
     ] ],
     [ "Classes", "annotated.html", [
@@ -62,7 +64,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "CUDABuffer_8h.html",
-"structhmesh_1_1CUDABuffer.html#aef599154ba443f19947ac0e35de9d7d2"
+"structhmesh_1_1CUDABuffer.html#a441dd4de41655823f7b1aba457b1f02b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

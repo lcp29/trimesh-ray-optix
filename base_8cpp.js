@@ -1,5 +1,11 @@
 var base_8cpp =
 [
+    [ "OptixLogLevel", "base_8cpp.html#a85018285fc58e8636d2df9d1aa80b866", [
+      [ "OPTIX_LOG_LEVEL_FATAL", "base_8cpp.html#a85018285fc58e8636d2df9d1aa80b866a6556fb1057e12b61862ba0bcb2cd9560", null ],
+      [ "OPTIX_LOG_LEVEL_ERROR", "base_8cpp.html#a85018285fc58e8636d2df9d1aa80b866a1457ea6a08efe77805ce481c121e9bee", null ],
+      [ "OPTIX_LOG_LEVEL_WARNING", "base_8cpp.html#a85018285fc58e8636d2df9d1aa80b866a6094fccab2f86db5d60b058c480016b5", null ],
+      [ "OPTIX_LOG_LEVEL_INFO", "base_8cpp.html#a85018285fc58e8636d2df9d1aa80b866ab373784a2d01757ba038918d17a4faad", null ]
+    ] ],
     [ "buildSBT", "base_8cpp.html#afafd610579661d73d01849dceeb263da", null ],
     [ "createOptixContext", "base_8cpp.html#a800db5fccac1c13b95b900d308e8d160", null ],
     [ "createOptixModule", "base_8cpp.html#aaf7779d52f0c0ccddec605a843103182", null ],

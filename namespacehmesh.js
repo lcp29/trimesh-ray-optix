@@ -10,6 +10,12 @@ var namespacehmesh =
     [ "vec2i", "namespacehmesh.html#a7a727b211417fa79f33467afa369846e", null ],
     [ "vec3f", "namespacehmesh.html#aeef7333bb31f5b0ca9f88364b3438065", null ],
     [ "vec3i", "namespacehmesh.html#afb696e8d883e4c5002aa75c830c1e96d", null ],
+    [ "OptixLogLevel", "namespacehmesh.html#a85018285fc58e8636d2df9d1aa80b866", [
+      [ "OPTIX_LOG_LEVEL_FATAL", "namespacehmesh.html#a85018285fc58e8636d2df9d1aa80b866a6556fb1057e12b61862ba0bcb2cd9560", null ],
+      [ "OPTIX_LOG_LEVEL_ERROR", "namespacehmesh.html#a85018285fc58e8636d2df9d1aa80b866a1457ea6a08efe77805ce481c121e9bee", null ],
+      [ "OPTIX_LOG_LEVEL_WARNING", "namespacehmesh.html#a85018285fc58e8636d2df9d1aa80b866a6094fccab2f86db5d60b058c480016b5", null ],
+      [ "OPTIX_LOG_LEVEL_INFO", "namespacehmesh.html#a85018285fc58e8636d2df9d1aa80b866ab373784a2d01757ba038918d17a4faad", null ]
+    ] ],
     [ "buildSBT", "namespacehmesh.html#afafd610579661d73d01849dceeb263da", null ],
     [ "changeLastDim", "namespacehmesh.html#adf9fbdf7e92d58b07290af354fa50399", null ],
     [ "createOptixContext", "namespacehmesh.html#a800db5fccac1c13b95b900d308e8d160", null ],

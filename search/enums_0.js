@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sbttype_0',['SBTType',['../sbtdef_8h.html#ab3e8f37dfc846390aea8b1639e4bae42',1,'sbtdef.h']]]
+  ['optixloglevel_0',['OptixLogLevel',['../namespacehmesh.html#a85018285fc58e8636d2df9d1aa80b866',1,'hmesh']]]
 ];
