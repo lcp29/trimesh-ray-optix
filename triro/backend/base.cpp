@@ -23,8 +23,19 @@ OptixShaderBindingTable sbts[SBTType::count];
 OptixPipeline optixPipelines[SBTType::count];
 OptixProgramGroup optixProgramGroups[SBTType::count][3];
 
+enum OptixLogLevel {
+    OPTIX_LOG_LEVEL_FATAL = 1,
+    OPTIX_LOG_LEVEL_ERROR = 2,
+    OPTIX_LOG_LEVEL_WARNING = 3,
+    OPTIX_LOG_LEVEL_INFO = 4
+};
+
+static OptixLogLevel contextLogLevel = OPTIX_LOG_LEVEL_WARNING;
+
 static void context_log_cb(unsigned int level, const char *tag,
                            const char *message, void *) {
+    if (level > (unsigned int)contextLogLevel)
+        return;
     std::cerr << "[" << (int)level << "][" << tag << "]: " << message << "\n";
 }
 
