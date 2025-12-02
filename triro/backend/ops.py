@@ -2,47 +2,19 @@ import os
 import torch
 from typing import Tuple
 from jaxtyping import Float32, Bool, Int32
-import importlib
-import torch.utils.cpp_extension
 from triro.ray.ray_optix import OptixAccelStructureWrapper
+from triro import _backend
 
-triro_module = None
+triro_module = _backend
 
 
 def get_module():
     """
-    Get the triro module by compiling it if necessary and importing it.
+    Get the triro module.
 
     Returns:
         The triro module.
     """
-    global triro_module
-    if triro_module is not None:
-        return triro_module
-    # compile module
-    # source file
-    source_files = ['base.cpp', 'binding.cpp', 'ray.cpp']
-    # optix install location
-    optix_install_dir = os.environ['OptiX_INSTALL_DIR']
-    # include optix
-    cflags = [f'-I{optix_install_dir}/include']
-    # link with cuda lib
-    ldflags = ['-lcuda']
-    # full source path
-    source_paths = [os.path.join(os.path.dirname(__file__), fn) for fn in source_files]
-    # for windows
-    if os.name == 'nt':
-        cflags += ['/DNOMINMAX']    # avoid conflict in windows headers
-        ldflags = ['/DLL', 'cuda.lib', 'cudart.lib', 'Advapi32.lib']
-    torch.utils.cpp_extension.load(
-        name="triro",
-        sources=source_paths,
-        extra_cflags=cflags,
-        extra_ldflags=ldflags,
-        with_cuda=True,
-        verbose=False,
-    )
-    triro_module = importlib.import_module("triro")
     return triro_module
 
 

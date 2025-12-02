@@ -3,6 +3,7 @@ import os
 import triro
 import subprocess
 import setuptools
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 if os.name == 'nt':
     from setuptools import msvc
@@ -72,6 +73,19 @@ def compile_and_embed_shaders():
 
 compile_and_embed_shaders()
 
+source_files = ['triro/backend/base.cpp', 'triro/backend/binding.cpp', 'triro/backend/ray.cpp']
+optix_install_dir = os.environ['OptiX_INSTALL_DIR']
+include_dirs = [f'{optix_install_dir}/include', 'triro/backend/']
+library_dirs = []
+libraries = ['cuda']
+
+if os.name == 'nt':
+    extra_compile_args = ['/DNOMINMAX']
+    extra_link_args = ['cuda.lib', 'cudart.lib', 'Advapi32.lib']
+else:
+    extra_compile_args = []
+    extra_link_args = ['-lcuda']
+
 setuptools.setup(
     name='triro',
     version=triro.__version__,
@@ -79,9 +93,23 @@ setuptools.setup(
     author_email='helmholtz@fomal.host',
     description='Triro - An in-place replacement for trimesh.ray in Optix',
     long_description=long_descriprion,
-    long_descriprion_content_type='text/markdown',
+    long_description_content_type='text/markdown',
     url='',
     packages=setuptools.find_packages(),
+    ext_modules=[
+        CUDAExtension(
+            'triro._backend',
+            source_files,
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
+            include_dirs=include_dirs,
+            library_dirs=library_dirs,
+            libraries=libraries
+        )
+    ],
+    cmdclass={
+        'build_ext': BuildExtension.with_options(use_ninja=False)
+    },
     package_data={
         'triro': [
             'backend/embedded/shaders_embedded.h',
