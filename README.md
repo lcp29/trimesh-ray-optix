@@ -5,8 +5,6 @@ Triro is a mesh ray tracing library implemented with NVIDIA OptiX. It has compat
 ## 🔧️ Installation
 > You may need to enable <a href="https://superuser.com/questions/1715715/can-i-enable-unicode-utf-8-worldwide-support-in-windows-11-but-set-another-enco">unicode UTF-8 global support</a> in Windows for some character set problems.
 
-⚠️**Important**: You may face problem using PyTorch>2.8.0 (<a href="https://github.com/lcp29/trimesh-ray-optix/issues/14">#14</a>). We recommend PyTorch<=2.8.0 for now.
-
 You need an OptiX SDK (>=7.7) installed to get to use Triro. If you are running Windows you also need an MSVC installation. First
 
 ```sh
@@ -15,13 +13,13 @@ export OptiX_INSTALL_DIR=<Your Optix SDK installation directory>
 ```
 Then
 ```sh
-pip install git+https://github.com/lcp29/trimesh-ray-optix
+pip install git+https://github.com/lcp29/trimesh-ray-optix --no-build-isolation
 ```
 or
 ```sh
 git clone https://github.com/lcp29/trimesh-ray-optix
 cd trimesh-ray-optix
-pip install .
+pip install . --no-build-isolation
 ```
 ## 📖️ Quick Start
 ```python

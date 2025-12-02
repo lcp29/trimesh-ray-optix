@@ -19,8 +19,12 @@ SHADER_IR_PATH = os.path.join(SHADER_WORK_DIR, SHADER_BASENAME[:SHADER_BASENAME.
 SHADER_HEADER_PATH = os.path.join(SHADER_WORK_DIR, SHADER_BASENAME[:SHADER_BASENAME.rfind('.')] + '_embedded.h')
 SHADER_TEMPLATE_PATH = os.path.join(SHADER_WORK_DIR, 'shader_template.h')
 
+optix_install_dir = os.environ.get('OptiX_INSTALL_DIR')
+if not optix_install_dir:
+    raise RuntimeError('Environment variable "OptiX_INSTALL_DIR" not found. Please set it to the directory of your OptiX installation.')
+
 def compile_and_embed_shaders():
-    optix_include_dir = os.path.join(os.environ['OptiX_INSTALL_DIR'], 'include')
+    optix_include_dir = os.path.join(optix_install_dir, 'include')
     # compile shader files
     if not os.path.exists(SHADER_WORK_DIR):
         os.makedirs(SHADER_WORK_DIR)
@@ -74,7 +78,6 @@ def compile_and_embed_shaders():
 compile_and_embed_shaders()
 
 source_files = ['triro/backend/base.cpp', 'triro/backend/binding.cpp', 'triro/backend/ray.cpp']
-optix_install_dir = os.environ['OptiX_INSTALL_DIR']
 include_dirs = [f'{optix_install_dir}/include', 'triro/backend/']
 library_dirs = []
 libraries = ['cuda']
